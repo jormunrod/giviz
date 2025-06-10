@@ -2,7 +2,7 @@
 name: Historias de usuario
 about: Plantilla para describir historias de usuario vinculadas a requisitos del proyecto
   GIVIZ.
-title: "[Historia de usuario] Breve resumen de la funcionalidad"
+title: "[HUX] Breve resumen de la funcionalidad"
 labels: historia de usuario
 assignees: jormunrod
 
@@ -19,9 +19,7 @@ para [objetivo].
 - [ ] Criterio 1
 - [ ] Criterio 2
 
-**Requisito relacionado:** RFx
-
-**Sprint objetivo:** Sprint x
+**Objetivo relacionado:** RFx
 
 **Notas adicionales:**
 [Enlaces, referencias, mockups, etc.]
