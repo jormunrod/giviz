@@ -1,5 +1,7 @@
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import RepoInput from "../components/RepoInput";
+
 
 export default function Home() {
   return (
@@ -13,6 +15,7 @@ export default function Home() {
           GIVIZ uses <span className="font-bold">AI</span> to detect roles, evaluate<br />
           communication, and surface collaboration patterns.
         </p>
+        <RepoInput />
       </main>
       <Footer />
     </div>
