@@ -1,5 +1,4 @@
 @import "./buttons.css";
-@import "./tipography.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
