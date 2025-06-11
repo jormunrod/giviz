@@ -4,7 +4,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        givizBackground: "#FFFDF8",
+        givizBackground: "#F5F5F7",
         givizBlack: "#111827",
         givizBlue1: "#DDF5F7",
         givizBlue2: "#C0D9E5",
