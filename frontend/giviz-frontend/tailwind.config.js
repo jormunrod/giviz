@@ -1,12 +1,22 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        givizBackground: "#FFFDF8",
+        givizBlack: "#111827",
+        givizBlue1: "#DDF5F7",
+        givizBlue2: "#C0D9E5",
+        givizBlue3: "#44679F",
+        givizBlue4: "#3B577D",
+      },
+      fontFamily: {
+        sans: ["Kufam", "sans-serif"],
+        inter: ["Inter", "sans-serif"],
+        serif: ["Merriweather", "serif"],
+      },
+    },
   },
   plugins: [],
-}
-
+};
