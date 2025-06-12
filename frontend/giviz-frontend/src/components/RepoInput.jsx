@@ -3,10 +3,13 @@ import Card from "./Card";
 import TextInput from "./TextInput";
 import GivizButton from "./GivizButton";
 import { useRepo } from "../hooks/useRepo";
+import { useNavigate } from "react-router-dom";
 
 export default function RepoInput() {
   const [repoUrlInput, setRepoUrlInput] = useState("");
   const { setRepoUrl } = useRepo();
+  const navigate = useNavigate();
+
   const examples = [
     { label: "gitignore", url: "https://github.com/github/gitignore" },
     { label: "Rath", url: "https://github.com/rath-team/rath" },
@@ -17,15 +20,41 @@ export default function RepoInput() {
     { label: "Mastodon", url: "https://github.com/mastodon/mastodon" },
   ];
 
+  const API_BASE =
+    import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
+
+  const extractOwnerRepo = (url) => {
+    const regex = /github\.com\/([\w.-]+)\/([\w.-]+)(\/)?$/;
+    const match = url.match(regex);
+    if (!match) return null;
+    return { owner: match[1], repo: match[2] };
+  };
+
+  const validateRepo = async ({ owner, repo }) => {
+    try {
+      const res = await fetch(
+        `${API_BASE}/check-repo/?owner=${owner}&repo=${repo}`
+      );
+      const data = await res.json();
+      if (data.exists) {
+        setRepoUrl({ owner, repo });
+        navigate("/analyze");
+      } else {
+        alert("Repository not found or is private.");
+      }
+    } catch (err) {
+      console.error("API error:", err);
+      alert("Error connecting to backend.");
+    }
+  };
+
   function handleSubmit(e) {
     e.preventDefault();
     const trimmed = repoUrlInput.trim();
-    const githubRepoRegex =
-      /^(https?:\/\/)?(www\.)?github\.com\/([\w.-]+)\/([\w.-]+)(\.git)?$/;
+    const result = extractOwnerRepo(trimmed);
 
-    if (githubRepoRegex.test(trimmed)) {
-      setRepoUrl(trimmed);
-      // TODO: navigate to analysis page
+    if (result) {
+      validateRepo(result);
     } else {
       alert("Please enter a valid GitHub repository URL.");
     }
@@ -48,18 +77,18 @@ export default function RepoInput() {
         Try these example repositories:
       </p>
       <div className="flex flex-wrap gap-3">
-        {examples.map(({ label, url }) => (
-          <GivizButton
-            key={label}
-            className="px-4 py-1 text-sm"
-            onClick={() => {
-              setRepoUrl(url);
-              // TODO: navigate("/analyze");
-            }}
-          >
-            {label}
-          </GivizButton>
-        ))}
+        {examples.map(({ label, url }) => {
+          const data = extractOwnerRepo(url);
+          return (
+            <GivizButton
+              key={label}
+              className="px-4 py-1 text-sm"
+              onClick={() => data && validateRepo(data)}
+            >
+              {label}
+            </GivizButton>
+          );
+        })}
       </div>
     </Card>
   );
