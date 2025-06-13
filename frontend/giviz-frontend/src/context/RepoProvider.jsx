@@ -2,10 +2,10 @@ import { useState } from "react";
 import { RepoContext } from "./RepoContext";
 
 export function RepoProvider({ children }) {
-  const [repoUrl, setRepoUrl] = useState("");
+  const [repoInfo, setRepoInfo] = useState("");
 
   return (
-    <RepoContext.Provider value={{ repoUrl, setRepoUrl }}>
+    <RepoContext.Provider value={{ repoInfo, setRepoInfo }}>
       {children}
     </RepoContext.Provider>
   );

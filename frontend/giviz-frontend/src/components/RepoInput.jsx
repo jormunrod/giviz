@@ -6,22 +6,18 @@ import { useRepo } from "../hooks/useRepo";
 import { useNavigate } from "react-router-dom";
 
 export default function RepoInput() {
-  const [repoUrlInput, setRepoUrlInput] = useState("");
-  const { setRepoUrl } = useRepo();
+  const [inputUrl, setInputUrl] = useState("");
+  const { setRepoInfo } = useRepo();
   const navigate = useNavigate();
 
   const examples = [
-    { label: "gitignore", url: "https://github.com/github/gitignore" },
+    { label: "giviz", url: "https://github.com/jormunrod/giviz" },
     { label: "Rath", url: "https://github.com/rath-team/rath" },
-    {
-      label: "PetClinic",
-      url: "https://github.com/spring-projects/spring-petclinic",
-    },
+    { label: "PetClinic", url: "https://github.com/spring-projects/spring-petclinic" },
     { label: "Mastodon", url: "https://github.com/mastodon/mastodon" },
   ];
 
-  const API_BASE =
-    import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
 
   const extractOwnerRepo = (url) => {
     const regex = /github\.com\/([\w.-]+)\/([\w.-]+)(\/)?$/;
@@ -32,13 +28,11 @@ export default function RepoInput() {
 
   const validateRepo = async ({ owner, repo }) => {
     try {
-      const res = await fetch(
-        `${API_BASE}/check-repo/?owner=${owner}&repo=${repo}`
-      );
+      const res = await fetch(`${API_BASE}/check-repo/?owner=${owner}&repo=${repo}`);
       const data = await res.json();
       if (data.exists) {
-        setRepoUrl({ owner, repo });
-        navigate("/analyze");
+        setRepoInfo({ owner, repo });
+        navigate("/analysis");
       } else {
         alert("Repository not found or is private.");
       }
@@ -50,7 +44,7 @@ export default function RepoInput() {
 
   function handleSubmit(e) {
     e.preventDefault();
-    const trimmed = repoUrlInput.trim();
+    const trimmed = inputUrl.trim();
     const result = extractOwnerRepo(trimmed);
 
     if (result) {
@@ -64,8 +58,8 @@ export default function RepoInput() {
     <Card className="max-w-3xl w-full py-8 p-6">
       <form onSubmit={handleSubmit} className="flex items-center gap-4 mb-4">
         <TextInput
-          value={repoUrlInput}
-          onChange={(e) => setRepoUrlInput(e.target.value.toLowerCase())}
+          value={inputUrl}
+          onChange={(e) => setInputUrl(e.target.value)}
           placeholder="https://github.com/user/repo"
           className="flex-grow"
         />
