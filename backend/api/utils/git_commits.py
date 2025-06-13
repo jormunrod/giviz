@@ -46,7 +46,7 @@ def get_repo_local_path(owner: str, repo: str) -> str:
 
 
 def clone_or_update_repo(
-        git_url: str, owner: str, repo: str, depth: Optional[int] = None
+    git_url: str, owner: str, repo: str, depth: Optional[int] = None
 ) -> Repo:
     """
     Clone the repository if not present locally or update it if it exists.
@@ -109,7 +109,7 @@ def detect_commit_type(message: Optional[str]) -> str:
 
 
 def analyze_commits(
-        owner: str, repo: str, branch: Optional[str] = None
+    owner: str, repo: str, branch: Optional[str] = None
 ) -> List[Dict[str, Any]]:
     """
     Analyze commits of a given repository and branch.
