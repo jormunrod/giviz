@@ -1,4 +1,3 @@
-import json
 import os
 
 import requests
@@ -8,10 +7,10 @@ from rest_framework import status, serializers
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from api.utils.repo_analyzer import (
+from api.utils.git_commits import (
     clone_or_update_repo,
-    analyze_and_save_commits,
-    get_repo_local_path,
+    analyze_commits,
+    save_commits,
 )
 
 load_dotenv()
@@ -126,21 +125,17 @@ def analyze_repo(request):
         if depth == 0:
             depth = None
 
+        # Clona o actualiza el repo
         clone_or_update_repo(git_url, owner, repo, depth=depth)
-        analyze_and_save_commits(owner, repo)
-        local_path = get_repo_local_path(owner, repo)
-        json_path = os.path.join(local_path, "commits.json")
-        with open(json_path) as f:
-            commits = json.load(f)
-    except FileNotFoundError:
-        return Response(
-            {"error": "No commit data generated"},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        )
+        # Analiza los commits
+        commits = analyze_commits(owner, repo)
+        # Guarda los commits (como commits.json en el repo cache)
+        save_commits(owner, repo, commits)
+
     except Exception as e:
         return Response(
             {"error": "Repository analysis failed", "detail": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
-    return Response({"commits": commits})
+    return Response({"status": "ok"})
