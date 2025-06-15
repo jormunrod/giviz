@@ -4,11 +4,8 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from api.serializers.repo import RepoQueryWithDepthSerializer
 
-from api.utils.git_commits import (
-    clone_or_update_repo,
-    analyze_commits,
-    save_commits,
-)
+from api.utils.git.repo import clone_or_update_repo
+from api.utils.git.commits import analyze_commits, save_commits
 
 
 @swagger_auto_schema(

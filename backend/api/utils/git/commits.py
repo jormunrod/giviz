@@ -1,18 +1,10 @@
-"""
-Module to clone, update, analyze git repositories and save commit data.
-"""
-
 import json
 import os
 import re
 from typing import List, Dict, Optional, Any
-
+from .common import REPOS_PATH
 from git import Repo
-
-REPOS_PATH = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "../../repos_cache")
-)
-os.makedirs(REPOS_PATH, exist_ok=True)
+from .repo import get_repo_local_path
 
 NULL_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
 COMMIT_TYPES = {
@@ -28,58 +20,6 @@ COMMIT_TYPES = {
     "style": "style",
     "chore": "chore",
 }
-
-
-def get_repo_local_path(owner: str, repo: str) -> str:
-    """
-    Get the local filesystem path for a given repository.
-
-    Args:
-        owner: Repository owner name.
-        repo: Repository name.
-
-    Returns:
-        The local path where the repository is or will be stored.
-    """
-    safe_path = f"{owner}__{repo}".replace("/", "_")
-    return os.path.join(REPOS_PATH, safe_path)
-
-
-def clone_or_update_repo(
-    git_url: str, owner: str, repo: str, depth: Optional[int] = None
-) -> Repo:
-    """
-    Clone the repository if not present locally or update it if it exists.
-
-    Args:
-        git_url: The git repository URL.
-        owner: Repository owner name.
-        repo: Repository name.
-        depth: Optional depth for shallow clone or fetch.
-
-    Returns:
-        A git.Repo object representing the local repository.
-    """
-    local_path = get_repo_local_path(owner, repo)
-    if os.path.exists(local_path):
-        repo_obj = Repo(local_path)
-        shallow_file = os.path.join(local_path, ".git", "shallow")
-        if depth is None:
-            if os.path.exists(shallow_file):
-                repo_obj.git.fetch("--unshallow")
-            repo_obj.remotes.origin.pull()
-        else:
-            if os.path.exists(shallow_file):
-                repo_obj.git.fetch("--deepen", str(depth))
-            repo_obj.remotes.origin.pull()
-    else:
-        clone_kwargs = (
-            {"depth": depth, "single_branch": True}
-            if depth
-            else {"single_branch": True}
-        )
-        repo_obj = Repo.clone_from(git_url, local_path, **clone_kwargs)
-    return repo_obj
 
 
 def detect_commit_type(message: Optional[str]) -> str:
