@@ -19,7 +19,7 @@ def fetch_issues(owner: str, repo: str, first: int = 100) -> List[Dict]:
         A list of issues as dictionaries.
     """
     query = """
-    query($owner: String!, $name: String!, $after: String) {
+    query($owner: String!, $name: String!, $after: String, $first: Int!) {
       repository(owner: $owner, name: $name) {
         issues(first: $first, after: $after, orderBy: {field: CREATED_AT, direction: DESC}) {
           nodes {
@@ -62,6 +62,14 @@ def fetch_issues(owner: str, repo: str, first: int = 100) -> List[Dict]:
         )
         response.raise_for_status()
         data = response.json()
+
+        if "errors" in data:
+            raise RuntimeError(f"GraphQL error: {data['errors']}")
+
+        if "data" not in data or not data["data"].get("repository"):
+            raise RuntimeError(
+                f"Unexpected response structure:\n{json.dumps(data, indent=2)}"
+            )
 
         try:
             issues = data["data"]["repository"]["issues"]["nodes"]
