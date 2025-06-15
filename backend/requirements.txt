@@ -4,4 +4,5 @@ django-cors-headers
 gitpython~=3.1.44
 requests~=2.32.4
 djangorestframework~=3.16.0
-drf-yasg~=1.21.10
+drf-yasg~=1.21.1
+isort~=6.0.1
