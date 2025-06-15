@@ -46,6 +46,7 @@ lerna-debug.log*
 *.njsproj
 *.sln
 *.sw?
+*.code-workspace
 
 # macOS system files
 .DS_Store
