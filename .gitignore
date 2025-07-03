@@ -7,6 +7,7 @@ __pycache__/
 venv/
 env/
 *.env
+backend/data/
 
 # Python package/lock files
 Pipfile.lock
@@ -18,6 +19,7 @@ db.sqlite3
 media/
 staticfiles/
 local_settings.py
+**/repos_cache/
 
 # Node/React
 node_modules/
@@ -45,6 +47,7 @@ lerna-debug.log*
 *.njsproj
 *.sln
 *.sw?
+*.code-workspace
 
 # macOS system files
 .DS_Store
