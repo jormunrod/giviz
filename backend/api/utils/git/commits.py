@@ -2,7 +2,7 @@ import os
 import re
 from typing import List, Dict, Optional, Any
 from git import Repo
-from .repo import get_repo_local_path  # Only needed for analyze_commits
+from .repo import get_repo_local_path
 from api.utils.common.save import save_repo_data
 
 NULL_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
