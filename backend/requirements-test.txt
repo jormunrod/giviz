@@ -1,0 +1,4 @@
+pytest
+django
+pytest-django
+requests-mock
