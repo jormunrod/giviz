@@ -20,6 +20,7 @@ media/
 staticfiles/
 local_settings.py
 **/repos_cache/
+.coverage
 
 # Node/React
 node_modules/

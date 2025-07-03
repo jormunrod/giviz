@@ -9,3 +9,4 @@ isort~=6.0.1
 pytest
 pytest-django
 requests-mock
+pytest-cov
