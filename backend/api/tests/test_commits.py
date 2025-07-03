@@ -1,6 +1,7 @@
+from unittest.mock import patch
+
 import pytest
 from rest_framework.test import APIClient
-from unittest.mock import patch
 
 
 @pytest.mark.django_db
@@ -25,7 +26,8 @@ def test_extract_commits_invalid():
 @patch("api.views.commits.analyze_commits")
 @patch("api.views.commits.save_commits")
 def test_extract_commits_success(mock_save, mock_analyze, mock_clone):
-    mock_analyze.return_value = [{"hash": "abc123", "message": "Initial commit"}]
+    mock_analyze.return_value = [
+        {"hash": "abc123", "message": "Initial commit"}]
     client = APIClient()
     data = {"owner": "testuser", "repo": "testrepo"}
     response = client.post("/api/commits/extract/", data=data)

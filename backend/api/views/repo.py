@@ -1,15 +1,17 @@
 import os
+
 import requests
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+
 from api.serializers.repo import RepoQuerySerializer, RepoQueryWithDepthSerializer
-from api.utils.github.issues import fetch_issues, save_issues
-from api.utils.github.pulls import fetch_pulls, save_pulls
-from api.utils.github.contributors import fetch_contributors, save_contributors
 from api.utils.git.commits import analyze_commits, save_commits
 from api.utils.git.repo import clone_or_update_repo
+from api.utils.github.contributors import fetch_contributors, save_contributors
+from api.utils.github.issues import fetch_issues, save_issues
+from api.utils.github.pulls import fetch_pulls, save_pulls
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 if not GITHUB_TOKEN:
@@ -23,8 +25,7 @@ GITHUB_API_URL = os.getenv("GITHUB_API_URL", "https://api.github.com/graphql")
 )
 @api_view(["GET"])
 def check_repo(request):
-    """
-    Check if a GitHub repository exists and is accessible.
+    """Check if a GitHub repository exists and is accessible.
     """
     serializer = RepoQuerySerializer(data=request.GET)
     if not serializer.is_valid():
@@ -78,15 +79,14 @@ def check_repo(request):
                 "name": repo_data["name"],
                 "private": repo_data["isPrivate"],
             },
-        }
+        },
     )
 
 
 @swagger_auto_schema(method="post", request_body=RepoQueryWithDepthSerializer)
 @api_view(["POST"])
 def extract_all_data(request):
-    """
-    Extract and save all data (commits, issues, pulls, contributors) for a repo.
+    """Extract and save all data (commits, issues, pulls, contributors) for a repo.
     """
     serializer = RepoQueryWithDepthSerializer(data=request.data)
     if not serializer.is_valid():

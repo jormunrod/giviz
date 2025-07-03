@@ -1,7 +1,9 @@
-import os
 import json
-from typing import List, Dict
+import os
+from typing import Dict, List
+
 import requests
+
 from api.utils.common.save import save_repo_data
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
@@ -12,8 +14,7 @@ if not GITHUB_TOKEN:
 
 
 def fetch_pulls(owner: str, repo: str, first: int = 100) -> List[Dict]:
-    """
-    Fetch all pull requests from a GitHub repository using the GraphQL API.
+    """Fetch all pull requests from a GitHub repository using the GraphQL API.
     Returns a list of pull requests as dictionaries.
     """
     query = """
@@ -57,8 +58,9 @@ def fetch_pulls(owner: str, repo: str, first: int = 100) -> List[Dict]:
             raise RuntimeError(f"GraphQL error: {data['errors']}")
         if "data" not in data or not data["data"].get("repository"):
             raise RuntimeError(
-                f"Unexpected response structure:\n{json.dumps(data, indent=2)}"
-            )
+                f"Unexpected response structure:\n{
+                    json.dumps(
+                        data, indent=2)}", )
         try:
             pulls = data["data"]["repository"]["pullRequests"]["nodes"]
             page_info = data["data"]["repository"]["pullRequests"]["pageInfo"]
@@ -72,7 +74,6 @@ def fetch_pulls(owner: str, repo: str, first: int = 100) -> List[Dict]:
 
 
 def save_pulls(owner: str, repo: str, pulls: List[Dict]) -> None:
-    """
-    Save pull requests to a JSON file in the persistent data directory.
+    """Save pull requests to a JSON file in the persistent data directory.
     """
     save_repo_data(owner, repo, pulls, "pulls.json")

@@ -1,9 +1,11 @@
 import os
 import re
-from typing import List, Dict, Optional, Any
-from git import Repo
-from .repo import get_repo_local_path
+from typing import Any, Dict, List, Optional
+
 from api.utils.common.save import save_repo_data
+from git import Repo
+
+from .repo import get_repo_local_path
 
 NULL_TREE = "4b825dc642cb6eb9a060e54bf8d69288fbee4904"
 COMMIT_TYPES = {
@@ -22,14 +24,14 @@ COMMIT_TYPES = {
 
 
 def detect_commit_type(message: Optional[str]) -> str:
-    """
-    Detect the type of commit from its message.
+    """Detect the type of commit from its message.
 
     Args:
         message: Commit message string.
 
     Returns:
         Commit type as a string.
+
     """
     if not message:
         return "unknown"
@@ -48,10 +50,9 @@ def detect_commit_type(message: Optional[str]) -> str:
 
 
 def analyze_commits(
-    owner: str, repo: str, branch: Optional[str] = None
+    owner: str, repo: str, branch: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
-    """
-    Analyze commits of a given repository and branch.
+    """Analyze commits of a given repository and branch.
 
     Args:
         owner: Repository owner name.
@@ -60,15 +61,15 @@ def analyze_commits(
 
     Returns:
         A list of dictionaries containing commit data.
+
     """
     local_path = get_repo_local_path(owner, repo)
     repo_obj = Repo(local_path)
 
     if branch is None:
         try:
-            branch = repo_obj.git.symbolic_ref("refs/remotes/origin/HEAD").split("/")[
-                -1
-            ]
+            branch = repo_obj.git.symbolic_ref(
+                "refs/remotes/origin/HEAD").split("/")[-1]
         except Exception:
             branches = [b.name for b in repo_obj.remote().refs]
             if "main" in branches:
@@ -76,7 +77,8 @@ def analyze_commits(
             elif "master" in branches:
                 branch = "master"
             else:
-                raise Exception("No default branch found (tried 'main' and 'master').")
+                raise Exception(
+                    "No default branch found (tried 'main' and 'master').")
 
     commits = []
     for c in repo_obj.iter_commits(branch):
@@ -123,7 +125,7 @@ def analyze_commits(
                 "commit_timestamp": int(c.committed_datetime.timestamp()),
                 "commit_day": c.committed_datetime.date().isoformat(),
                 "affected_extensions": list(
-                    {os.path.splitext(f)[1] for f in c.stats.files.keys()}
+                    {os.path.splitext(f)[1] for f in c.stats.files.keys()},
                 ),
                 "has_test_changes": any(
                     "test" in f.lower() for f in c.stats.files.keys()
@@ -134,18 +136,18 @@ def analyze_commits(
                 ),
                 "is_revert": "revert" in c.message.lower(),
                 "commit_type": detect_commit_type(c.message),
-            }
+            },
         )
     return commits
 
 
 def save_commits(owner: str, repo: str, commits: List[Dict[str, Any]]) -> None:
-    """
-    Save analyzed commits to a JSON file in the persistent data directory.
+    """Save analyzed commits to a JSON file in the persistent data directory.
 
     Args:
         owner: Repository owner name.
         repo: Repository name.
         commits: List of commit data dictionaries to save.
+
     """
     save_repo_data(owner, repo, commits, "commits.json")

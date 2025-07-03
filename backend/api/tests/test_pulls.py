@@ -1,7 +1,8 @@
+from unittest.mock import patch
+
 import pytest
 from rest_framework.test import APIClient
-from unittest.mock import patch
-import os
+
 from api.utils.common import save
 
 
@@ -50,7 +51,8 @@ def test_extract_pulls_malformed_data():
 
 
 @pytest.mark.django_db
-@patch("api.views.pulls.fetch_pulls", side_effect=Exception("GitHub API error"))
+@patch("api.views.pulls.fetch_pulls",
+       side_effect=Exception("GitHub API error"))
 def test_extract_pulls_internal_error(mock_fetch):
     client = APIClient()
     data = {"owner": "testuser", "repo": "testrepo"}
@@ -63,7 +65,12 @@ def test_save_and_load_pulls(tmp_path):
     pulls_data = [{"number": 1, "title": "PR1"}, {"number": 2, "title": "PR2"}]
     owner, repo = "user", "repo"
     # Save pulls
-    save.save_repo_data(owner, repo, pulls_data, "pulls.json", base_dir=tmp_path)
+    save.save_repo_data(
+        owner,
+        repo,
+        pulls_data,
+        "pulls.json",
+        base_dir=tmp_path)
     # Load pulls
     loaded = save.load_repo_data(owner, repo, "pulls.json", base_dir=tmp_path)
     assert loaded == pulls_data

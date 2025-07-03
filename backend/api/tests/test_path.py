@@ -1,5 +1,5 @@
 import os
-import pytest
+
 from api.utils.common.path import get_repo_data_path
 
 
@@ -22,7 +22,11 @@ def test_get_repo_data_path_with_base_dir(tmp_path):
 
 
 def test_get_repo_data_path_with_all_args(tmp_path):
-    path = get_repo_data_path("user", "repo", subfolder="pulls", base_dir=tmp_path)
+    path = get_repo_data_path(
+        "user",
+        "repo",
+        subfolder="pulls",
+        base_dir=tmp_path)
     assert path == os.path.join(str(tmp_path), "user__repo", "pulls")
 
 
