@@ -2,7 +2,7 @@ import os
 import requests
 import json
 from typing import List, Dict
-from api.utils.git.repo import get_repo_local_path
+from api.utils.common.save import save_repo_data
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 GITHUB_API_URL = os.getenv("GITHUB_API_URL", "https://api.github.com/graphql")
@@ -88,13 +88,6 @@ def fetch_issues(owner: str, repo: str, first: int = 100) -> List[Dict]:
 
 def save_issues(owner: str, repo: str, issues: List[Dict]) -> None:
     """
-    Save issues to a local JSON file in the repository cache directory.
+    Save issues to a JSON file in the persistent data directory.
     """
-    path = get_repo_local_path(owner, repo)
-    os.makedirs(path, exist_ok=True)
-
-    issues_file = os.path.join(path, "issues.json")
-    with open(issues_file, "w", encoding="utf-8") as f:
-        json.dump(issues, f, indent=2, ensure_ascii=False)
-
-    print(f"Saved {len(issues)} issues to {issues_file}")
+    save_repo_data(owner, repo, issues, "issues.json")
