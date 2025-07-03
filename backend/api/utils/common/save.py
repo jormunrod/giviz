@@ -24,3 +24,18 @@ def save_repo_data(
     print(
         f"Saved {len(data) if hasattr(data, '__len__') else 'data'} items to {file_path}"
     )
+
+
+def load_repo_data(
+    owner: str, repo: str, filename: str, subfolder: Optional[str] = None
+) -> Any:
+    """
+    Load data from a JSON file in the repository's persistent data folder.
+    Returns None if the file does not exist.
+    """
+    path = get_repo_data_path(owner, repo, subfolder)
+    file_path = os.path.join(path, filename)
+    if not os.path.exists(file_path):
+        return None
+    with open(file_path, "r", encoding="utf-8") as f:
+        return json.load(f)
