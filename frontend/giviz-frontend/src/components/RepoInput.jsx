@@ -98,6 +98,30 @@ export default function RepoInput() {
     }
   }
 
+  const handleExample = async (url) => {
+    setInputUrl(url);
+    const result = extractOwnerRepo(url);
+    if (result) {
+      setLoading(true);
+      const extractResult = await extractAll({ ...result, depth: 0 });
+      if (extractResult && extractResult.status === "ok") {
+        const analysis = await fetchAnalysis({ ...result, depth: 0 });
+        setLoading(false);
+        if (analysis) {
+          setRepoInfo({ ...result, analysis });
+          navigate("/analysis");
+        } else {
+          alert("Failed to classify contributions.");
+        }
+      } else {
+        setLoading(false);
+        alert("Failed to extract repository data.");
+      }
+    } else {
+      alert("Please enter a valid GitHub repository URL.");
+    }
+  };
+
   return (
     <Card className="max-w-3xl w-full py-8 p-6">
       <form onSubmit={handleSubmit} className="flex items-center gap-4 mb-4">
@@ -120,25 +144,16 @@ export default function RepoInput() {
         Try these example repositories:
       </p>
       <div className="flex flex-wrap gap-3">
-        {examples.map(({ label, url }) => {
-          const data = extractOwnerRepo(url);
-          return (
-            <GivizButton
-              key={label}
-              className="px-4 py-1 text-sm"
-              onClick={() =>
-                data &&
-                handleSubmit({
-                  preventDefault: () => {},
-                  target: { value: url },
-                })
-              }
-              disabled={loading}
-            >
-              {label}
-            </GivizButton>
-          );
-        })}
+        {examples.map(({ label, url }) => (
+          <GivizButton
+            key={label}
+            className="px-4 py-1 text-sm"
+            onClick={() => handleExample(url)}
+            disabled={loading}
+          >
+            {label}
+          </GivizButton>
+        ))}
       </div>
     </Card>
   );
