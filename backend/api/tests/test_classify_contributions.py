@@ -1,7 +1,7 @@
+import os
 import pytest
 from api.utils.ai.classify_contributions import classify_all_contributions
 
-# Mock data for testing
 contributions = [
     {
         "type": "commit",
