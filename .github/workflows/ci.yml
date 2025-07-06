@@ -50,6 +50,7 @@ jobs:
           pytest --cov=api
 
   conventional-commits:
+    if: github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
     runs-on: ubuntu-latest
     steps:
       - uses: amannn/action-semantic-pull-request@v5
