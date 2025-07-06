@@ -1,4 +1,20 @@
 import pytest
+import os
+import sys
+from unittest import mock
+
+
+@pytest.fixture(autouse=True, scope="module")
+def patch_openai_and_env():
+    sys.modules["openai"] = mock.MagicMock()
+    sys.modules["dotenv"] = mock.MagicMock()
+    os.environ["OPENAI_API_KEY"] = "test-key"
+    yield
+    del sys.modules["openai"]
+    del sys.modules["dotenv"]
+    del os.environ["OPENAI_API_KEY"]
+
+
 from api.utils.ai.classify_contributions import classify_all_contributions
 
 # Mock data for testing
