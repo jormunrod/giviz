@@ -1,5 +1,3 @@
-import os
-import pytest
 from api.utils.ai.classify_contributions import classify_all_contributions
 
 contributions = [
