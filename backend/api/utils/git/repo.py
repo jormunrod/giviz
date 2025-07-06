@@ -1,8 +1,10 @@
-import os
 import logging
+import os
 from typing import Optional, Tuple
-from git import Repo, GitCommandError
+
 from dotenv import load_dotenv
+
+from git import GitCommandError, Repo
 
 # Ensure logging is configured globally
 try:
@@ -14,7 +16,10 @@ load_dotenv()
 
 REPOS_PATH = os.getenv(
     "REPOS_PATH",
-    os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../repos_cache")),
+    os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            "../../../repos_cache")),
 )
 REPOS_PATH = os.path.abspath(REPOS_PATH)
 os.makedirs(REPOS_PATH, exist_ok=True)
@@ -23,18 +28,16 @@ logger = logging.getLogger(__name__)
 
 
 def get_repo_local_path(owner: str, repo: str) -> str:
-    """
-    Get the local filesystem path for a given repository.
+    """Get the local filesystem path for a given repository.
     """
     safe_path = f"{owner}__{repo}".replace("/", "_")
     return os.path.join(REPOS_PATH, safe_path)
 
 
 def clone_or_update_repo(
-    git_url: str, owner: str, repo: str, depth: Optional[int] = None
+    git_url: str, owner: str, repo: str, depth: Optional[int] = None,
 ) -> Tuple[Optional[Repo], str]:
-    """
-    Clone the repository if not present locally or update it if it exists.
+    """Clone the repository if not present locally or update it if it exists.
     Returns a tuple (Repo object or None, status string: 'cloned', 'updated', 'error').
     """
     local_path = get_repo_local_path(owner, repo)
@@ -52,15 +55,14 @@ def clone_or_update_repo(
                 repo_obj.remotes.origin.pull()
             logger.info(f"Updated repo {owner}/{repo} at {local_path}")
             return repo_obj, "updated"
-        else:
-            clone_kwargs = (
-                {"depth": depth, "single_branch": True}
-                if depth
-                else {"single_branch": True}
-            )
-            repo_obj = Repo.clone_from(git_url, local_path, **clone_kwargs)
-            logger.info(f"Cloned repo {owner}/{repo} at {local_path}")
-            return repo_obj, "cloned"
+        clone_kwargs = (
+            {"depth": depth, "single_branch": True}
+            if depth
+            else {"single_branch": True}
+        )
+        repo_obj = Repo.clone_from(git_url, local_path, **clone_kwargs)
+        logger.info(f"Cloned repo {owner}/{repo} at {local_path}")
+        return repo_obj, "cloned"
     except (GitCommandError, Exception) as e:
         logger.error(f"Error cloning/updating repo {owner}/{repo}: {e}")
         return None, "error"

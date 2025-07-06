@@ -1,6 +1,6 @@
-import os
 import json
-from typing import List, Dict
+import os
+from typing import Dict, List
 
 import requests
 
@@ -14,11 +14,11 @@ if not GITHUB_TOKEN:
 
 
 def fetch_issues(owner: str, repo: str, first: int = 100) -> List[Dict]:
-    """
-    Fetch all issues from a GitHub repository using the GraphQL API.
+    """Fetch all issues from a GitHub repository using the GraphQL API.
 
     Returns:
         A list of issues as dictionaries.
+
     """
     query = """
     query($owner: String!, $name: String!, $after: String, $first: Int!) {
@@ -70,8 +70,9 @@ def fetch_issues(owner: str, repo: str, first: int = 100) -> List[Dict]:
 
         if "data" not in data or not data["data"].get("repository"):
             raise RuntimeError(
-                f"Unexpected response structure:\n{json.dumps(data, indent=2)}"
-            )
+                f"Unexpected response structure:\n{
+                    json.dumps(
+                        data, indent=2)}", )
 
         try:
             issues = data["data"]["repository"]["issues"]["nodes"]
@@ -89,7 +90,6 @@ def fetch_issues(owner: str, repo: str, first: int = 100) -> List[Dict]:
 
 
 def save_issues(owner: str, repo: str, issues: List[Dict]) -> None:
-    """
-    Save issues to a JSON file in the persistent data directory.
+    """Save issues to a JSON file in the persistent data directory.
     """
     save_repo_data(owner, repo, issues, "issues.json")

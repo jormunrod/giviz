@@ -2,18 +2,17 @@ from rest_framework import serializers
 
 
 class RepoQuerySerializer(serializers.Serializer):
-    """
-    Basic serializer for identifying a GitHub repository.
+    """Basic serializer for identifying a GitHub repository.
     Used in API endpoints that require only owner and repo name.
     """
 
-    owner = serializers.CharField(help_text="Repository owner (user or organization)")
+    owner = serializers.CharField(
+        help_text="Repository owner (user or organization)")
     repo = serializers.CharField(help_text="Repository name")
 
 
 class RepoQueryWithDepthSerializer(RepoQuerySerializer):
-    """
-    Extends RepoQuerySerializer to include optional clone depth.
+    """Extends RepoQuerySerializer to include optional clone depth.
     Used when cloning the repository via Git.
     """
 

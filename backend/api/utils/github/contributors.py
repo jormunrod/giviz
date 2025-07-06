@@ -1,7 +1,9 @@
-import os
 import json
-from typing import List, Dict
+import os
+from typing import Dict, List
+
 import requests
+
 from api.utils.common.save import save_repo_data
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
@@ -12,8 +14,7 @@ if not GITHUB_TOKEN:
 
 
 def fetch_contributors(owner: str, repo: str, first: int = 100) -> List[Dict]:
-    """
-    Fetch contributors from a GitHub repository using the GraphQL API.
+    """Fetch contributors from a GitHub repository using the GraphQL API.
     Returns a list of contributors as dictionaries.
     """
     query = """
@@ -54,8 +55,9 @@ def fetch_contributors(owner: str, repo: str, first: int = 100) -> List[Dict]:
             raise RuntimeError(f"GraphQL error: {data['errors']}")
         if "data" not in data or not data["data"].get("repository"):
             raise RuntimeError(
-                f"Unexpected response structure:\n{json.dumps(data, indent=2)}"
-            )
+                f"Unexpected response structure:\n{
+                    json.dumps(
+                        data, indent=2)}", )
         try:
             users = data["data"]["repository"]["mentionableUsers"]["nodes"]
             page_info = data["data"]["repository"]["mentionableUsers"]["pageInfo"]
@@ -69,7 +71,6 @@ def fetch_contributors(owner: str, repo: str, first: int = 100) -> List[Dict]:
 
 
 def save_contributors(owner: str, repo: str, contributors: List[Dict]) -> None:
-    """
-    Save contributors to a JSON file in the persistent data directory.
+    """Save contributors to a JSON file in the persistent data directory.
     """
     save_repo_data(owner, repo, contributors, "contributors.json")
