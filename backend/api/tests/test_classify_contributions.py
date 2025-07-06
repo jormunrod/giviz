@@ -1,21 +1,4 @@
-import sys
-import types
 import pytest
-
-
-@pytest.fixture(autouse=True, scope="module")
-def patch_openai_and_env(monkeypatch):
-    mock_openai = types.ModuleType("openai")
-    mock_client = type(
-        "MockClient", (), {"__init__": lambda self, api_key=None: None}
-    )()
-    mock_openai.OpenAI = lambda api_key=None: mock_client
-    sys.modules["openai"] = mock_openai
-    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
-    yield
-    del sys.modules["openai"]
-
-
 from api.utils.ai.classify_contributions import classify_all_contributions
 
 # Mock data for testing
