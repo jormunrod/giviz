@@ -10,3 +10,4 @@ pytest
 pytest-django
 requests-mock
 pytest-cov
+openai~=1.93.0
