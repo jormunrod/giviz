@@ -1,5 +1,6 @@
 import { useRepo } from "../hooks/useRepo";
 import EffortPieChart from "../components/EffortPieChart";
+import InfoTooltip from "../components/InfoTooltip";
 
 export default function Analysis() {
   const { repoInfo } = useRepo();
@@ -15,9 +16,14 @@ export default function Analysis() {
         </div>
       </div>
       <div className="mt-8 w-full max-w-2xl bg-white p-6 rounded-lg shadow-lg flex flex-col items-center">
-        <h2 className="text-xl font-semibold mb-4 text-center">
-          Effort Distribution
-        </h2>
+        <div className="flex items-center mb-4">
+          <h2 className="text-xl font-semibold text-center mr-2">
+            Effort Distribution
+          </h2>
+          <InfoTooltip
+            text={`This chart shows the percentage of total effort per category. Effort is calculated as the sum of lines added and deleted for commits, and as 1 for each issue or pull request. Categories are determined by AI classification of each contribution.`}
+          />
+        </div>
         <EffortPieChart data={globalEffortPercentages} />
       </div>
     </div>
