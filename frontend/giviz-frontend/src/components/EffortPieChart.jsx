@@ -1,3 +1,4 @@
+import { useState, useMemo } from "react";
 import {
   PieChart,
   Pie,
@@ -5,8 +6,9 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  Label,
+  Sector,
 } from "recharts";
-import { useState, useMemo } from "react";
 
 const COLORS = [
   "#0088FE",
@@ -17,6 +19,43 @@ const COLORS = [
   "#FF6699",
   "#00B8D9",
 ];
+
+function renderCustomizedLabel({ cx, cy, midAngle, outerRadius, percent }) {
+  const RADIAN = Math.PI / 180;
+  const radius = outerRadius + 32;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="#222"
+      textAnchor={x > cx ? "start" : "end"}
+      dominantBaseline="central"
+      fontSize={10}
+      fontWeight={400}
+      style={{ textShadow: "0 1px 2px #fff8" }}
+    >
+      {`${(percent * 100).toFixed(1)}%`}
+    </text>
+  );
+}
+
+function CustomLegend({ payload }) {
+  return (
+    <ul className="flex flex-wrap gap-3 justify-center mt-4">
+      {payload.map((entry, i) => (
+        <li key={i} className="flex items-center gap-2 text-sm">
+          <span
+            className="inline-block w-3 h-3 rounded-full"
+            style={{ background: entry.color }}
+          ></span>
+          <span>{entry.value}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 function groupSmallCategories(data, threshold = 2) {
   let others = [];
@@ -42,11 +81,11 @@ function groupSmallCategories(data, threshold = 2) {
 
 export default function EffortPieChart({ data, contributions }) {
   const [showDetails, setShowDetails] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(null);
   const grouped = useMemo(() => groupSmallCategories(data), [data]);
   const othersDetails =
     grouped.find((c) => c.category === "Others")?._details || [];
 
-  // Count contributions by type
   const counts = useMemo(() => {
     if (!Array.isArray(contributions)) return null;
     let commits = 0,
@@ -75,27 +114,37 @@ export default function EffortPieChart({ data, contributions }) {
             cx="50%"
             cy="50%"
             outerRadius={100}
-            labelLine={false}
+            label={renderCustomizedLabel}
+            labelLine={true}
+            onMouseEnter={(_, idx) => setActiveIndex(idx)}
+            onMouseLeave={() => setActiveIndex(null)}
+            activeIndex={activeIndex}
+            activeShape={(props) => (
+              <Sector {...props} outerRadius={110} fill={props.fill} />
+            )}
           >
             {grouped.map((entry, index) => (
               <Cell
                 key={`cell-${index}`}
                 fill={COLORS[index % COLORS.length]}
+                stroke="#fff"
+                strokeWidth={activeIndex === index ? 3 : 1}
+                style={{
+                  filter:
+                    activeIndex === index
+                      ? "drop-shadow(0 2px 8px #0002)"
+                      : undefined,
+                }}
               />
             ))}
           </Pie>
           <Tooltip
             formatter={(value, name, props) => {
-              if (
-                props.payload.category === "Others" &&
-                props.payload._details
-              ) {
-                return [`${value}%`, `${name} (click for details)`];
-              }
-              return [`${value}%`, name];
+              const val = props.payload.value;
+              return [`${value}%${val !== undefined ? ` (${val})` : ""}`, name];
             }}
           />
-          <Legend />
+          <Legend content={<CustomLegend />} />
         </PieChart>
       </ResponsiveContainer>
       {othersDetails.length > 0 && (
