@@ -70,6 +70,5 @@ jobs:
             ci
             perf
             revert
-          subjectPattern: ^(Merge|Update|Create|Initial|[a-zA-Z]+)(:| ).*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
