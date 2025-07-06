@@ -15,8 +15,23 @@ export default function InfoTooltip({ text }) {
         onBlur={() => setShow(false)}
       >
         <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor">
-          <circle cx="10" cy="10" r="9" stroke="currentColor" strokeWidth="2" fill="white" />
-          <text x="10" y="15" textAnchor="middle" fontSize="13" fill="currentColor">?</text>
+          <circle
+            cx="10"
+            cy="10"
+            r="9"
+            stroke="currentColor"
+            strokeWidth="2"
+            fill="white"
+          />
+          <text
+            x="10"
+            y="15"
+            textAnchor="middle"
+            fontSize="13"
+            fill="currentColor"
+          >
+            ?
+          </text>
         </svg>
       </button>
       {show && (
