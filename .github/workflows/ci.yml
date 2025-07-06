@@ -41,6 +41,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
 
+      - name: Set dummy GITHUB_TOKEN for tests
+        run: echo "GITHUB_TOKEN=dummy" >> $GITHUB_ENV
+
       - name: Run tests with coverage
         run: |
           cd backend
