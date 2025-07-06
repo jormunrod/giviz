@@ -4,20 +4,26 @@ import TextInput from "./TextInput";
 import GivizButton from "./GivizButton";
 import { useRepo } from "../hooks/useRepo";
 import { useNavigate } from "react-router-dom";
+import LoadingSpinner from "./LoadingSpinner";
 
 export default function RepoInput() {
   const [inputUrl, setInputUrl] = useState("");
+  const [loading, setLoading] = useState(false);
   const { setRepoInfo } = useRepo();
   const navigate = useNavigate();
 
   const examples = [
     { label: "giviz", url: "https://github.com/jormunrod/giviz" },
     { label: "Rath", url: "https://github.com/rath-team/rath" },
-    { label: "PetClinic", url: "https://github.com/spring-projects/spring-petclinic" },
+    {
+      label: "PetClinic",
+      url: "https://github.com/spring-projects/spring-petclinic",
+    },
     { label: "Mastodon", url: "https://github.com/mastodon/mastodon" },
   ];
 
-  const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
+  const API_BASE =
+    import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
 
   const extractOwnerRepo = (url) => {
     const regex = /github\.com\/([\w.-]+)\/([\w.-]+)(\/)?$/;
@@ -26,29 +32,67 @@ export default function RepoInput() {
     return { owner: match[1], repo: match[2] };
   };
 
-  const validateRepo = async ({ owner, repo }) => {
+  const extractAll = async ({ owner, repo, depth = 0 }) => {
+    setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/check-repo/?owner=${owner}&repo=${repo}`);
+      const res = await fetch(`${API_BASE}/repo/extract_all/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ owner, repo, depth }),
+      });
       const data = await res.json();
-      if (data.exists) {
-        setRepoInfo({ owner, repo });
-        navigate("/analysis");
-      } else {
-        alert("Repository not found or is private.");
-      }
+      setLoading(false);
+      return data;
     } catch (err) {
-      console.error("API error:", err);
-      alert("Error connecting to backend.");
+      setLoading(false);
+      alert("Error extracting repo data");
+      console.error("Error extracting repo data:", err);
+      return null;
     }
   };
 
-  function handleSubmit(e) {
+  const fetchAnalysis = async ({ owner, repo, depth = 0 }) => {
+    try {
+      const res = await fetch(
+        `${API_BASE}/analysis/classify_contributions_percentages/`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ owner, repo, depth }),
+        }
+      );
+      const data = await res.json();
+      if (data && data.status === "ok" && Array.isArray(data.percentages)) {
+        return { globalEffortPercentages: data.percentages };
+      }
+      return null;
+    } catch (err) {
+      alert("Error fetching analysis data");
+      console.error("Error fetching analysis data:", err);
+      return null;
+    }
+  };
+
+  async function handleSubmit(e) {
     e.preventDefault();
     const trimmed = inputUrl.trim();
     const result = extractOwnerRepo(trimmed);
-
     if (result) {
-      validateRepo(result);
+      setLoading(true);
+      const extractResult = await extractAll({ ...result, depth: 0 });
+      if (extractResult && extractResult.status === "ok") {
+        const analysis = await fetchAnalysis({ ...result, depth: 0 });
+        setLoading(false);
+        if (analysis) {
+          setRepoInfo({ ...result, analysis });
+          navigate("/analysis");
+        } else {
+          alert("Failed to classify contributions.");
+        }
+      } else {
+        setLoading(false);
+        alert("Failed to extract repository data.");
+      }
     } else {
       alert("Please enter a valid GitHub repository URL.");
     }
@@ -63,10 +107,15 @@ export default function RepoInput() {
           placeholder="https://github.com/user/repo"
           className="flex-grow"
         />
-        <GivizButton type="submit" className="px-6 py-2 text-sm">
-          Go!
+        <GivizButton
+          type="submit"
+          className="px-6 py-2 text-sm"
+          disabled={loading}
+        >
+          {loading ? "Extracting..." : "Go!"}
         </GivizButton>
       </form>
+      {loading && <LoadingSpinner text="Extracting repository data..." />}
       <p className="text-sm text-givizBlack mb-2">
         Try these example repositories:
       </p>
@@ -77,7 +126,14 @@ export default function RepoInput() {
             <GivizButton
               key={label}
               className="px-4 py-1 text-sm"
-              onClick={() => data && validateRepo(data)}
+              onClick={() =>
+                data &&
+                handleSubmit({
+                  preventDefault: () => {},
+                  target: { value: url },
+                })
+              }
+              disabled={loading}
             >
               {label}
             </GivizButton>
