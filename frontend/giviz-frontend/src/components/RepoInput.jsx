@@ -9,6 +9,7 @@ import LoadingSpinner from "./LoadingSpinner";
 export default function RepoInput() {
   const [inputUrl, setInputUrl] = useState("");
   const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState("");
   const { setRepoInfo } = useRepo();
   const navigate = useNavigate();
 
@@ -33,7 +34,6 @@ export default function RepoInput() {
   };
 
   const extractAll = async ({ owner, repo, depth = 0 }) => {
-    setLoading(true);
     try {
       const res = await fetch(`${API_BASE}/repo/extract_all/`, {
         method: "POST",
@@ -41,10 +41,8 @@ export default function RepoInput() {
         body: JSON.stringify({ owner, repo, depth }),
       });
       const data = await res.json();
-      setLoading(false);
       return data;
     } catch (err) {
-      setLoading(false);
       alert("Error extracting repo data");
       console.error("Error extracting repo data:", err);
       return null;
@@ -62,10 +60,9 @@ export default function RepoInput() {
         }
       );
       const data = await res.json();
-      if (data && data.status === "ok" && Array.isArray(data.percentages)) {
-        return { globalEffortPercentages: data.percentages };
-      }
-      return null;
+      return data && data.status === "ok" && Array.isArray(data.percentages)
+        ? { globalEffortPercentages: data.percentages }
+        : null;
     } catch (err) {
       alert("Error fetching analysis data");
       console.error("Error fetching analysis data:", err);
@@ -79,18 +76,22 @@ export default function RepoInput() {
     const result = extractOwnerRepo(trimmed);
     if (result) {
       setLoading(true);
+      setStep("Cloning and extracting repository data...");
       const extractResult = await extractAll({ ...result, depth: 0 });
       if (extractResult && extractResult.status === "ok") {
+        setStep("Analyzing contributions with AI...");
         const analysis = await fetchAnalysis({ ...result, depth: 0 });
-        setLoading(false);
         if (analysis) {
           setRepoInfo({ ...result, analysis });
           navigate("/analysis");
         } else {
+          setLoading(false);
+          setStep("");
           alert("Failed to classify contributions.");
         }
       } else {
         setLoading(false);
+        setStep("");
         alert("Failed to extract repository data.");
       }
     } else {
@@ -103,18 +104,22 @@ export default function RepoInput() {
     const result = extractOwnerRepo(url);
     if (result) {
       setLoading(true);
+      setStep("Cloning and extracting repository data...");
       const extractResult = await extractAll({ ...result, depth: 0 });
       if (extractResult && extractResult.status === "ok") {
+        setStep("Analyzing contributions with AI...");
         const analysis = await fetchAnalysis({ ...result, depth: 0 });
-        setLoading(false);
         if (analysis) {
           setRepoInfo({ ...result, analysis });
           navigate("/analysis");
         } else {
+          setLoading(false);
+          setStep("");
           alert("Failed to classify contributions.");
         }
       } else {
         setLoading(false);
+        setStep("");
         alert("Failed to extract repository data.");
       }
     } else {
@@ -139,7 +144,9 @@ export default function RepoInput() {
           {loading ? "Extracting..." : "Go!"}
         </GivizButton>
       </form>
-      {loading && <LoadingSpinner text="Extracting repository data..." />}
+      {loading && (
+        <LoadingSpinner text={step || "Extracting repository data..."} />
+      )}
       <p className="text-sm text-givizBlack mb-2">
         Try these example repositories:
       </p>

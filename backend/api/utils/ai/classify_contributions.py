@@ -15,11 +15,12 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 
 
 PROMPT_TEMPLATE = """
-Classify each contribution (commit, issue, or pull request) into one of these categories, and use 'others' **only** as a last resort:
+Classify each contribution (commit, issue, or pull request) into one of these categories. Base your decision **primarily** on the files changed, then on the text content.
 
+Categories:
 1. development: new features, enhancements
 2. testing: unit/integration tests, test pipelines
-3. documentation: README, docs, code comments
+3. documentation: README, docs, code comments, markdown
 4. refactor: code restructuring without behavior changes
 5. chore: maintenance (dependencies, linting, formatting)
 6. bugfix: bug fixes
@@ -27,18 +28,24 @@ Classify each contribution (commit, issue, or pull request) into one of these ca
 8. security: vulnerabilities and security patches
 9. build/ci: build scripts, CI/CD configuration
 10. ux/ui: user interface or experience changes
-11. others: if it truly doesn’t fit any of the above
 
-**Instructions:**  
-- Use the `message` (for commits), the `title` + `body` (for issues/pulls), **and** the `files_changed` list to determine intent.  
-- For example, if `files_changed` includes `.md` files or a `docs/` folder, favor **documentation** even if the text doesn’t contain “doc.”  
-- If you see test paths (`test_*.py`, `__tests__`, `spec/`), favor **testing** even without the word “test” in the message.  
-- Only after considering content and file context, apply keyword mapping as a secondary check.  
-- Use **others** only when neither content nor files match any category.
+**Instructions:**
+- **Step 1:** Examine `files_changed`. Prioritize:
+  - **docs** (folders or `.md`, `.rst`, `.adoc`, `.txt`) → documentation
+  - **test** patterns (`test_*.`, `/__tests__/`, `spec/`) → testing
+  - **ci/build** scripts (`.yml`, `.yaml`, `build/`, `Dockerfile`) → build/ci
+  - **security** folders/files (`.secrets`, `security/`, `auth*`) → security
+  - **performance** related (`perf`, `benchmark`, `cache*`) → performance
+  - **ui** assets (`.css`, `.scss`, `.html`, `ui/`, `layout/`) → ux/ui
+  - **code** files (`.py`, `.js`, `.java`, etc.) → require deeper check (go to Step 2)
 
-**Keyword mapping rules (secondary):**
+- **Step 2:** Only if files are ambiguous or code files, use `message` (commits) or `title`+`body` (issues/prs) to refine category.
+
+- **Step 3:** Apply keyword mapping **only** when file-based signals and content signals conflict, or when files are generic.
+
+**Keyword mapping (secondary):**
 - testing  ← “test”, “spec”, “ci.yml”
-- documentation ← “doc”, “readme”, “md”
+- documentation ← “doc”, “readme”, "md" 
 - bugfix ← “fix”, “bug”
 - performance ← “perf”, “optimi”
 - security ← “vulnerab”, “auth”, “encrypt”
@@ -48,11 +55,11 @@ Classify each contribution (commit, issue, or pull request) into one of these ca
 - ux/ui ← “ui”, “ux”, “layout”
 - development ← “feat”, “add”, “update”, “new”
 
-Each item has a `type` field: "commit", "issue", or "pull".
+**Output format:**
 Return a JSON array where each object includes:
-  - the `type`
-  - the identifier (`hash` for commits, `number` for issues/pulls)
-  - the assigned `category`
+  - `type`: "commit" | "issue" | "pull"
+  - identifier: `hash` for commits, `number` for issues/pulls
+  - `category`
 
 Input example:
 {example_input}
