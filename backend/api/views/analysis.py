@@ -69,7 +69,7 @@ def classify_contributions(request):
 @api_view(["POST"])
 def classify_contributions_percentages(request):
     """
-    Classifies contributions and returns the percentage for each category.
+    Classifies contributions and returns the percentage for each category, weighted by lines changed (additions + deletions) for commits.
     First tries to read contributions_classified.json, if it does not exist it generates it.
     """
     serializer = RepoQueryWithDepthSerializer(data=request.data)
@@ -91,14 +91,30 @@ def classify_contributions_percentages(request):
         return Response(
             {"error": "No classified data found after classification."}, status=500
         )
-    # Calculate percentages
-    total = len(classified)
-    counts = {}
+    # Load commits.json for line stats
+    commits_raw = load_repo_data(owner, repo, "commits.json") or []
+    commit_lines = {
+        c["hash"]: c.get("insertions", 0) + c.get("deletions", 0)
+        for c in commits_raw
+        if "hash" in c
+    }
+    # Calculate weighted effort per category
+    effort = {}
+    total_effort = 0
     for item in classified:
         cat = item.get("category", "others")
-        counts[cat] = counts.get(cat, 0) + 1
+        if item["type"] == "commit":
+            lines = commit_lines.get(item["hash"], 1)  # fallback to 1 if not found
+            effort[cat] = effort.get(cat, 0) + lines
+            total_effort += lines
+        else:
+            # For issues/pulls, count as 1 (or set to 0 to ignore)
+            effort[cat] = effort.get(cat, 0) + 1
+            total_effort += 1
+    if total_effort == 0:
+        return Response({"error": "No effort data found."}, status=500)
     percentages = [
-        {"category": cat, "percentage": round((count / total) * 100, 2)}
-        for cat, count in counts.items()
+        {"category": cat, "percentage": round((val / total_effort) * 100, 2)}
+        for cat, val in effort.items()
     ]
     return Response({"status": "ok", "percentages": percentages})
