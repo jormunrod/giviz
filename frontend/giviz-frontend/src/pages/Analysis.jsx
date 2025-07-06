@@ -25,7 +25,10 @@ export default function Analysis() {
             text={`This chart shows the percentage of total effort per category. Effort is calculated as the sum of lines added and deleted for commits, and as 1 for each issue or pull request. Categories are determined by AI classification of each contribution.`}
           />
         </div>
-        <EffortPieChart data={globalEffortPercentages} />
+        <EffortPieChart
+          data={globalEffortPercentages}
+          contributions={repoInfo?.analysis?.classified}
+        />
       </Card>
     </div>
   );

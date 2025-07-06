@@ -51,6 +51,7 @@ export default function RepoInput() {
 
   const fetchAnalysis = async ({ owner, repo, depth = 0 }) => {
     try {
+      // Call the endpoint that returns the complete classified data
       const res = await fetch(
         `${API_BASE}/analysis/classify_contributions_percentages/`,
         {
@@ -60,9 +61,36 @@ export default function RepoInput() {
         }
       );
       const data = await res.json();
-      return data && data.status === "ok" && Array.isArray(data.percentages)
-        ? { globalEffortPercentages: data.percentages }
-        : null;
+      // If the backend only returns percentages, another request is needed to get the classified contributions
+      let classified = null;
+      if (data && data.status === "ok" && Array.isArray(data.percentages)) {
+        // Try to get the classified contributions if they are not present in the response
+        if (data.classified) {
+          classified = data.classified;
+        } else {
+          const res2 = await fetch(
+            `${API_BASE}/analysis/classify_contributions/`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ owner, repo, depth }),
+            }
+          );
+          const data2 = await res2.json();
+          if (
+            data2 &&
+            data2.status === "ok" &&
+            Array.isArray(data2.classified)
+          ) {
+            classified = data2.classified;
+          }
+        }
+        return {
+          globalEffortPercentages: data.percentages,
+          classified: classified || [],
+        };
+      }
+      return null;
     } catch (err) {
       alert("Error fetching analysis data");
       console.error("Error fetching analysis data:", err);

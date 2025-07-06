@@ -6,7 +6,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 const COLORS = [
   "#0088FE",
@@ -40,22 +40,33 @@ function groupSmallCategories(data, threshold = 2) {
   return main;
 }
 
-export default function EffortPieChart({ data }) {
+export default function EffortPieChart({ data, contributions }) {
   const [showDetails, setShowDetails] = useState(false);
-  if (!Array.isArray(data) || data.length === 0) {
-    return <div className="text-gray-500">No data to display</div>;
-  }
-  const grouped = groupSmallCategories(data);
+  const grouped = useMemo(() => groupSmallCategories(data), [data]);
   const othersDetails =
     grouped.find((c) => c.category === "Others")?._details || [];
 
+  // Count contributions by type
+  const counts = useMemo(() => {
+    if (!Array.isArray(contributions)) return null;
+    let commits = 0,
+      issues = 0,
+      pulls = 0;
+    for (const c of contributions) {
+      if (c.type === "commit") commits++;
+      else if (c.type === "issue") issues++;
+      else if (c.type === "pull") pulls++;
+    }
+    return { commits, issues, pulls, total: commits + issues + pulls };
+  }, [contributions]);
+
+  if (!Array.isArray(data) || data.length === 0) {
+    return <div className="text-gray-500">No data to display</div>;
+  }
+
   return (
-    <div
-      className={`w-full flex flex-col items-center justify-center transition-all duration-500 ${
-        showDetails ? "h-auto min-h-[28rem]" : "h-80"
-      }`}
-    >
-      <ResponsiveContainer width="100%" height={showDetails ? 320 : "100%"}>
+    <div className="w-full flex flex-col items-center justify-center transition-all duration-500">
+      <ResponsiveContainer width="100%" height={showDetails ? 320 : 260}>
         <PieChart>
           <Pie
             data={grouped}
@@ -107,7 +118,7 @@ export default function EffortPieChart({ data }) {
         </button>
       )}
       <div
-        className={`transition-all duration-500 overflow-hidden w-full flex justify-center ${
+        className={`transition-all duration-500 overflow-hidden w-full flex flex-col items-center justify-center ${
           showDetails ? "max-h-96 opacity-100 mt-4" : "max-h-0 opacity-0"
         }`}
         aria-hidden={!showDetails}
@@ -126,6 +137,17 @@ export default function EffortPieChart({ data }) {
           </ul>
         </div>
       </div>
+      {counts && (
+        <div className="mt-6 w-full max-w-md text-xs text-center text-givizBlue4 bg-givizBlue1 border border-givizBlue2 rounded-xl p-2">
+          <span className="font-semibold">Analyzed contributions:</span>{" "}
+          {counts.total} &nbsp;|&nbsp;
+          <span className="font-semibold">Commits:</span> {counts.commits}{" "}
+          &nbsp;|&nbsp;
+          <span className="font-semibold">Issues:</span> {counts.issues}{" "}
+          &nbsp;|&nbsp;
+          <span className="font-semibold">PRs:</span> {counts.pulls}
+        </div>
+      )}
     </div>
   );
 }

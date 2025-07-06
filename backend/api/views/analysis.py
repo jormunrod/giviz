@@ -117,4 +117,6 @@ def classify_contributions_percentages(request):
         {"category": cat, "percentage": round((val / total_effort) * 100, 2)}
         for cat, val in effort.items()
     ]
-    return Response({"status": "ok", "percentages": percentages})
+    return Response(
+        {"status": "ok", "percentages": percentages, "classified": classified}
+    )
