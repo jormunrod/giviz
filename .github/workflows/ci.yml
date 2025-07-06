@@ -54,6 +54,9 @@ jobs:
     steps:
       - uses: amannn/action-semantic-pull-request@v5
         with:
+          validateSingleCommit: true
+          validateSingleCommitMatchesPrTitle: false
+          requireScope: false
           types: |
             feat
             fix
