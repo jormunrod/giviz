@@ -76,7 +76,6 @@ def test_prepare_issues_basic():
             "labels": {"nodes": []},
         },
     ]
-    # Simula el flatten del campo author y la extracción de comentarios/labels como haría el pipeline real
     for issue in data:
         issue["author"] = issue["author"]["login"]
         issue["comments"] = issue["comments"]["totalCount"]
