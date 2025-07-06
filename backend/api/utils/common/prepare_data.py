@@ -83,14 +83,13 @@ def prepare_issues(
     issues: List[Dict[str, Any]], max_items: int = 100
 ) -> List[Dict[str, Any]]:
     issues = issues[:max_items]
-    issues = filter_bots(issues, user_field="user")
+    issues = filter_bots(issues, user_field="author")
     issues = normalize_dates(issues, ["createdAt", "closedAt"])
     issues = truncate_texts(issues, ["title", "body"], max_length=200)
     fields = [
         "number",
         "author",
         "title",
-        "user",
         "state",
         "createdAt",
         "closedAt",
@@ -106,7 +105,7 @@ def prepare_pulls(
     pulls: List[Dict[str, Any]], max_items: int = 100
 ) -> List[Dict[str, Any]]:
     pulls = pulls[:max_items]
-    pulls = filter_bots(pulls, user_field="user")
+    pulls = filter_bots(pulls, user_field="author")
     pulls = normalize_dates(pulls, ["createdAt", "closedAt", "mergedAt"])
     pulls = truncate_texts(pulls, ["title"], max_length=200)
     pulls = truncate_texts(pulls, ["body"], max_length=500)
