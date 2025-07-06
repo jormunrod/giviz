@@ -6,7 +6,6 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  Label,
   Sector,
 } from "recharts";
 
@@ -20,36 +19,20 @@ const COLORS = [
   "#00B8D9",
 ];
 
-function renderCustomizedLabel({ cx, cy, midAngle, outerRadius, percent }) {
-  const RADIAN = Math.PI / 180;
-  const radius = outerRadius + 32;
-  const x = cx + radius * Math.cos(-midAngle * RADIAN);
-  const y = cy + radius * Math.sin(-midAngle * RADIAN);
-  return (
-    <text
-      x={x}
-      y={y}
-      fill="#222"
-      textAnchor={x > cx ? "start" : "end"}
-      dominantBaseline="central"
-      fontSize={10}
-      fontWeight={400}
-      style={{ textShadow: "0 1px 2px #fff8" }}
-    >
-      {`${(percent * 100).toFixed(1)}%`}
-    </text>
-  );
-}
-
 function CustomLegend({ payload }) {
+  const sorted = [...payload].sort(
+    (a, b) => b.payload.percentage - a.payload.percentage
+  );
   return (
     <ul className="flex flex-wrap gap-3 justify-center mt-4">
-      {payload.map((entry, i) => (
+      {sorted.map((entry, i) => (
         <li key={i} className="flex items-center gap-2 text-sm">
           <span
-            className="inline-block w-3 h-3 rounded-full"
-            style={{ background: entry.color }}
-          ></span>
+            className="inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
+            style={{ background: entry.color, color: "#fff" }}
+          >
+            {entry.payload.percentage.toFixed(1)}%
+          </span>
           <span>{entry.value}</span>
         </li>
       ))}
@@ -76,6 +59,7 @@ function groupSmallCategories(data, threshold = 2) {
       _details: others,
     });
   }
+  main.sort((a, b) => b.percentage - a.percentage);
   return main;
 }
 
@@ -104,8 +88,8 @@ export default function EffortPieChart({ data, contributions }) {
   }
 
   return (
-    <div className="w-full flex flex-col items-center justify-center transition-all duration-500">
-      <ResponsiveContainer width="100%" height={showDetails ? 320 : 260}>
+    <div className="w-full flex flex-col items-center justify-center transition-all duration-500 pt-8 pb-4">
+      <ResponsiveContainer width="100%" height={showDetails ? 340 : 280}>
         <PieChart>
           <Pie
             data={grouped}
@@ -114,8 +98,6 @@ export default function EffortPieChart({ data, contributions }) {
             cx="50%"
             cy="50%"
             outerRadius={100}
-            label={renderCustomizedLabel}
-            labelLine={true}
             onMouseEnter={(_, idx) => setActiveIndex(idx)}
             onMouseLeave={() => setActiveIndex(null)}
             activeIndex={activeIndex}
