@@ -16,7 +16,7 @@ export default function GivizButton({
   return (
     <button
       type={type}
-      className={`appearance-none rounded-md font-medium border shadow-[3px_3px_0px_0px_#0F172A] hover:shadow-[1px_1px_0px_0px_#0F172A] hover:translate-y-[1px] transition-all cursor-pointer px-6 py-2 ${variantClass} ${className}`}
+      className={`appearance-none rounded-md font-medium border border-black shadow-[3px_3px_0px_0px_#0F172A] hover:shadow-[1px_1px_0px_0px_#0F172A] hover:translate-y-[1px] transition-all cursor-pointer px-6 py-2 ${variantClass} ${className}`}
       {...props}
     >
       {children}
