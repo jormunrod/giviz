@@ -4,6 +4,7 @@ import { useRepo } from "../hooks/useRepo";
 import EffortPieChart from "../components/EffortPieChart";
 import InfoTooltip from "../components/InfoTooltip";
 import Card from "../components/Card";
+import ContributorsList from "../components/ContributorsList";
 
 export default function Analysis() {
   const { repoInfo } = useRepo();
@@ -70,22 +71,11 @@ export default function Analysis() {
         {loadingContrib ? (
           <div className="text-center">Loading contributors...</div>
         ) : contributors.length > 0 ? (
-          <select
-            className="p-2 rounded border border-gray-300"
-            onChange={(e) =>
-              e.target.value && handleSelectContributor(e.target.value)
-            }
-            defaultValue=""
-          >
-            <option value="" disabled>
-              -- Select a contributor --
-            </option>
-            {contributors.map((c, i) => (
-              <option key={i} value={c.login || c.username || c.name}>
-                {c.login || c.username || c.name}
-              </option>
-            ))}
-          </select>
+          <ContributorsList
+            contributors={contributors}
+            onSelect={handleSelectContributor}
+            pageSize={10}
+          />
         ) : (
           <div className="text-center">No contributors for this repo.</div>
         )}
