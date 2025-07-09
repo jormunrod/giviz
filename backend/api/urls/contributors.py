@@ -9,4 +9,5 @@ urlpatterns = [
         name="extract_contributors_graphql",
     ),
     path("", contributors.get_contributors, name="get_contributors"),
+    path("single/", contributors.get_contributor, name="get_contributor"),
 ]

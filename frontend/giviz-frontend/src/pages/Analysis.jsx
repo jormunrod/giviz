@@ -1,11 +1,43 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useRepo } from "../hooks/useRepo";
 import EffortPieChart from "../components/EffortPieChart";
 import InfoTooltip from "../components/InfoTooltip";
 import Card from "../components/Card";
+import ContributorsList from "../components/ContributorsList";
 
 export default function Analysis() {
   const { repoInfo } = useRepo();
   const globalEffortPercentages = repoInfo?.analysis?.globalEffortPercentages;
+  const [contributors, setContributors] = useState([]);
+  const [loadingContrib, setLoadingContrib] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    async function fetchContributors() {
+      if (!repoInfo?.owner || !repoInfo?.repo) return;
+      setLoadingContrib(true);
+      try {
+        const API_BASE =
+          import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
+        const url = `${API_BASE}/contributors/?owner=${repoInfo.owner}&repo=${repoInfo.repo}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data && Array.isArray(data.contributors)) {
+          setContributors(data.contributors);
+        }
+      } catch {
+        setContributors([]);
+      } finally {
+        setLoadingContrib(false);
+      }
+    }
+    fetchContributors();
+  }, [repoInfo]);
+
+  function handleSelectContributor(username) {
+    navigate(`/contributor/${username}`);
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] mb-16">
@@ -29,6 +61,24 @@ export default function Analysis() {
           data={globalEffortPercentages}
           contributions={repoInfo?.analysis?.classified}
         />
+      </Card>
+      <Card className="mt-8 w-full max-w-2xl flex flex-col items-center">
+        <div className="flex items-center mb-4">
+          <h2 className="text-xl font-semibold text-center mr-2">
+            Select a contributor
+          </h2>
+        </div>
+        {loadingContrib ? (
+          <div className="text-center">Loading contributors...</div>
+        ) : contributors.length > 0 ? (
+          <ContributorsList
+            contributors={contributors}
+            onSelect={handleSelectContributor}
+            pageSize={10}
+          />
+        ) : (
+          <div className="text-center">No contributors for this repo.</div>
+        )}
       </Card>
     </div>
   );
