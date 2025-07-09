@@ -4,20 +4,27 @@ import TextInput from "./TextInput";
 import GivizButton from "./GivizButton";
 import { useRepo } from "../hooks/useRepo";
 import { useNavigate } from "react-router-dom";
+import LoadingSpinner from "./LoadingSpinner";
 
 export default function RepoInput() {
   const [inputUrl, setInputUrl] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState("");
   const { setRepoInfo } = useRepo();
   const navigate = useNavigate();
 
   const examples = [
     { label: "giviz", url: "https://github.com/jormunrod/giviz" },
     { label: "Rath", url: "https://github.com/rath-team/rath" },
-    { label: "PetClinic", url: "https://github.com/spring-projects/spring-petclinic" },
+    {
+      label: "PetClinic",
+      url: "https://github.com/spring-projects/spring-petclinic",
+    },
     { label: "Mastodon", url: "https://github.com/mastodon/mastodon" },
   ];
 
-  const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
+  const API_BASE =
+    import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
 
   const extractOwnerRepo = (url) => {
     const regex = /github\.com\/([\w.-]+)\/([\w.-]+)(\/)?$/;
@@ -26,33 +33,127 @@ export default function RepoInput() {
     return { owner: match[1], repo: match[2] };
   };
 
-  const validateRepo = async ({ owner, repo }) => {
+  const extractAll = async ({ owner, repo, depth = 0 }) => {
     try {
-      const res = await fetch(`${API_BASE}/check-repo/?owner=${owner}&repo=${repo}`);
+      const res = await fetch(`${API_BASE}/repo/extract_all/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ owner, repo, depth }),
+      });
       const data = await res.json();
-      if (data.exists) {
-        setRepoInfo({ owner, repo });
-        navigate("/analysis");
-      } else {
-        alert("Repository not found or is private.");
-      }
+      return data;
     } catch (err) {
-      console.error("API error:", err);
-      alert("Error connecting to backend.");
+      alert("Error extracting repo data");
+      console.error("Error extracting repo data:", err);
+      return null;
     }
   };
 
-  function handleSubmit(e) {
+  const fetchAnalysis = async ({ owner, repo, depth = 0 }) => {
+    try {
+      // Call the endpoint that returns the complete classified data
+      const res = await fetch(
+        `${API_BASE}/analysis/classify_contributions_percentages/`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ owner, repo, depth }),
+        }
+      );
+      const data = await res.json();
+      // If the backend only returns percentages, another request is needed to get the classified contributions
+      let classified = null;
+      if (data && data.status === "ok" && Array.isArray(data.percentages)) {
+        // Try to get the classified contributions if they are not present in the response
+        if (data.classified) {
+          classified = data.classified;
+        } else {
+          const res2 = await fetch(
+            `${API_BASE}/analysis/classify_contributions/`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ owner, repo, depth }),
+            }
+          );
+          const data2 = await res2.json();
+          if (
+            data2 &&
+            data2.status === "ok" &&
+            Array.isArray(data2.classified)
+          ) {
+            classified = data2.classified;
+          }
+        }
+        return {
+          globalEffortPercentages: data.percentages,
+          classified: classified || [],
+        };
+      }
+      return null;
+    } catch (err) {
+      alert("Error fetching analysis data");
+      console.error("Error fetching analysis data:", err);
+      return null;
+    }
+  };
+
+  async function handleSubmit(e) {
     e.preventDefault();
     const trimmed = inputUrl.trim();
     const result = extractOwnerRepo(trimmed);
-
     if (result) {
-      validateRepo(result);
+      setLoading(true);
+      setStep("Cloning and extracting repository data...");
+      const extractResult = await extractAll({ ...result, depth: 0 });
+      if (extractResult && extractResult.status === "ok") {
+        setStep("Analyzing contributions with AI...");
+        const analysis = await fetchAnalysis({ ...result, depth: 0 });
+        if (analysis) {
+          setRepoInfo({ ...result, analysis });
+          navigate("/analysis");
+        } else {
+          setLoading(false);
+          setStep("");
+          alert("Failed to classify contributions.");
+        }
+      } else {
+        setLoading(false);
+        setStep("");
+        alert("Failed to extract repository data.");
+      }
     } else {
       alert("Please enter a valid GitHub repository URL.");
     }
   }
+
+  const handleExample = async (url) => {
+    setInputUrl(url);
+    const result = extractOwnerRepo(url);
+    if (result) {
+      setLoading(true);
+      setStep("Cloning and extracting repository data...");
+      const extractResult = await extractAll({ ...result, depth: 0 });
+      if (extractResult && extractResult.status === "ok") {
+        setStep("Analyzing contributions with AI...");
+        const analysis = await fetchAnalysis({ ...result, depth: 0 });
+        if (analysis) {
+          setRepoInfo({ ...result, analysis });
+          navigate("/analysis");
+        } else {
+          setLoading(false);
+          setStep("");
+          alert("Failed to classify contributions.");
+        }
+      } else {
+        setLoading(false);
+        setStep("");
+        alert("Failed to extract repository data.");
+      }
+    } else {
+      alert("Please enter a valid GitHub repository URL.");
+    }
+  };
 
   return (
     <Card className="max-w-3xl w-full py-8 p-6">
@@ -63,26 +164,31 @@ export default function RepoInput() {
           placeholder="https://github.com/user/repo"
           className="flex-grow"
         />
-        <GivizButton type="submit" className="px-6 py-2 text-sm">
-          Go!
+        <GivizButton
+          type="submit"
+          className="px-6 py-2 text-sm"
+          disabled={loading}
+        >
+          {loading ? "Extracting..." : "Go!"}
         </GivizButton>
       </form>
+      {loading && (
+        <LoadingSpinner text={step || "Extracting repository data..."} />
+      )}
       <p className="text-sm text-givizBlack mb-2">
         Try these example repositories:
       </p>
       <div className="flex flex-wrap gap-3">
-        {examples.map(({ label, url }) => {
-          const data = extractOwnerRepo(url);
-          return (
-            <GivizButton
-              key={label}
-              className="px-4 py-1 text-sm"
-              onClick={() => data && validateRepo(data)}
-            >
-              {label}
-            </GivizButton>
-          );
-        })}
+        {examples.map(({ label, url }) => (
+          <GivizButton
+            key={label}
+            className="px-4 py-1 text-sm"
+            onClick={() => handleExample(url)}
+            disabled={loading}
+          >
+            {label}
+          </GivizButton>
+        ))}
       </div>
     </Card>
   );
