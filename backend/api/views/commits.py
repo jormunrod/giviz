@@ -3,7 +3,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from api.serializers.repo import RepoQuerySerializer, RepoQueryWithDepthSerializer
+from api.serializers.repo import RepoQuerySerializer, RepoQueryWithDepthSerializer, RepoQueryWithMaxCommitsSerializer
 from api.utils.common.save import load_repo_data
 from api.utils.git.commits import analyze_commits, save_commits
 from api.utils.git.repo import clone_or_update_repo
@@ -11,13 +11,12 @@ from api.utils.git.repo import clone_or_update_repo
 
 @swagger_auto_schema(
     method="post",
-    request_body=RepoQueryWithDepthSerializer(),
+    request_body=RepoQueryWithMaxCommitsSerializer(),
 )
 @api_view(["POST"])
 def extract_commits(request):
-    """Get commits from a GitHub repository by cloning or updating the local copy.
-    """
-    serializer = RepoQueryWithDepthSerializer(data=request.data)
+    """Get commits from a GitHub repository by cloning or updating the local copy."""
+    serializer = RepoQueryWithMaxCommitsSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(
             {"error": "Missing or invalid parameters", "detail": serializer.errors},
@@ -27,6 +26,7 @@ def extract_commits(request):
     owner = serializer.validated_data["owner"]
     repo = serializer.validated_data["repo"]
     git_url = f"https://github.com/{owner}/{repo}.git"
+    max_commits = serializer.validated_data.get("max_commits", 50)
 
     try:
         depth = serializer.validated_data.get("depth", 0)
@@ -35,6 +35,7 @@ def extract_commits(request):
 
         clone_or_update_repo(git_url, owner, repo, depth=depth)
         commits = analyze_commits(owner, repo)
+        commits = commits[:max_commits]
         save_commits(owner, repo, commits)
 
     except Exception as e:

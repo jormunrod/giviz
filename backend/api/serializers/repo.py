@@ -44,3 +44,36 @@ class RepoQueryWithLimitsSerializer(RepoQueryWithDepthSerializer):
         default=50,
         help_text="Maximum number of pull requests to extract (optional).",
     )
+
+
+class RepoQueryWithMaxCommitsSerializer(RepoQueryWithDepthSerializer):
+    """Extends RepoQueryWithDepthSerializer to include an optional limit for commits only."""
+
+    max_commits = serializers.IntegerField(
+        required=False,
+        min_value=1,
+        default=50,
+        help_text="Maximum number of commits to extract (optional).",
+    )
+
+
+class RepoQueryWithMaxIssuesSerializer(RepoQuerySerializer):
+    """Extends RepoQuerySerializer to include an optional limit for issues only."""
+
+    max_issues = serializers.IntegerField(
+        required=False,
+        min_value=1,
+        default=50,
+        help_text="Maximum number of issues to extract (optional).",
+    )
+
+
+class RepoQueryWithMaxPullsSerializer(RepoQuerySerializer):
+    """Extends RepoQuerySerializer to include an optional limit for pull requests only."""
+
+    max_pulls = serializers.IntegerField(
+        required=False,
+        min_value=1,
+        default=50,
+        help_text="Maximum number of pull requests to extract (optional).",
+    )
