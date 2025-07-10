@@ -6,8 +6,7 @@ class RepoQuerySerializer(serializers.Serializer):
     Used in API endpoints that require only owner and repo name.
     """
 
-    owner = serializers.CharField(
-        help_text="Repository owner (user or organization)")
+    owner = serializers.CharField(help_text="Repository owner (user or organization)")
     repo = serializers.CharField(help_text="Repository name")
 
 
@@ -21,4 +20,27 @@ class RepoQueryWithDepthSerializer(RepoQuerySerializer):
         min_value=0,
         default=0,
         help_text="Depth of clone (optional). 0 means full history.",
+    )
+
+
+class RepoQueryWithLimitsSerializer(RepoQueryWithDepthSerializer):
+    """Extends RepoQueryWithDepthSerializer to include optional limits for commits, issues, and pulls."""
+
+    max_commits = serializers.IntegerField(
+        required=False,
+        min_value=1,
+        default=50,
+        help_text="Maximum number of commits to extract (optional).",
+    )
+    max_issues = serializers.IntegerField(
+        required=False,
+        min_value=1,
+        default=50,
+        help_text="Maximum number of issues to extract (optional).",
+    )
+    max_pulls = serializers.IntegerField(
+        required=False,
+        min_value=1,
+        default=50,
+        help_text="Maximum number of pull requests to extract (optional).",
     )
