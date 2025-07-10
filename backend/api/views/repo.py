@@ -6,7 +6,11 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from api.serializers.repo import RepoQuerySerializer, RepoQueryWithDepthSerializer
+from api.serializers.repo import (
+    RepoQuerySerializer,
+    RepoQueryWithDepthSerializer,
+    RepoQueryWithLimitsSerializer,
+)
 from api.utils.git.commits import analyze_commits, save_commits
 from api.utils.git.repo import clone_or_update_repo
 from api.utils.github.contributors import fetch_contributors, save_contributors
@@ -25,8 +29,7 @@ GITHUB_API_URL = os.getenv("GITHUB_API_URL", "https://api.github.com/graphql")
 )
 @api_view(["GET"])
 def check_repo(request):
-    """Check if a GitHub repository exists and is accessible.
-    """
+    """Check if a GitHub repository exists and is accessible."""
     serializer = RepoQuerySerializer(data=request.GET)
     if not serializer.is_valid():
         return Response(
@@ -83,12 +86,11 @@ def check_repo(request):
     )
 
 
-@swagger_auto_schema(method="post", request_body=RepoQueryWithDepthSerializer)
+@swagger_auto_schema(method="post", request_body=RepoQueryWithLimitsSerializer)
 @api_view(["POST"])
 def extract_all_data(request):
-    """Extract and save all data (commits, issues, pulls, contributors) for a repo.
-    """
-    serializer = RepoQueryWithDepthSerializer(data=request.data)
+    """Extract and save all data (commits, issues, pulls, contributors) for a repo."""
+    serializer = RepoQueryWithLimitsSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -97,6 +99,9 @@ def extract_all_data(request):
     depth = serializer.validated_data.get("depth", 0)
     if depth == 0:
         depth = None
+    max_commits = serializer.validated_data.get("max_commits", 50)
+    max_issues = serializer.validated_data.get("max_issues", 50)
+    max_pulls = serializer.validated_data.get("max_pulls", 50)
     summary = {}
     errors = {}
     # Commits
@@ -104,20 +109,21 @@ def extract_all_data(request):
         git_url = f"https://github.com/{owner}/{repo}.git"
         clone_or_update_repo(git_url, owner, repo, depth=depth)
         commits = analyze_commits(owner, repo)
+        commits = commits[:max_commits]
         save_commits(owner, repo, commits)
         summary["commits"] = len(commits)
     except Exception as e:
         errors["commits"] = str(e)
     # Issues
     try:
-        issues = fetch_issues(owner, repo)
+        issues = fetch_issues(owner, repo, first=max_issues)
         save_issues(owner, repo, issues)
         summary["issues"] = len(issues)
     except Exception as e:
         errors["issues"] = str(e)
     # Pulls
     try:
-        pulls = fetch_pulls(owner, repo)
+        pulls = fetch_pulls(owner, repo, first=max_pulls)
         save_pulls(owner, repo, pulls)
         summary["pulls"] = len(pulls)
     except Exception as e:

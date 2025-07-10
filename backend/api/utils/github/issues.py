@@ -14,7 +14,7 @@ if not GITHUB_TOKEN:
 
 
 def fetch_issues(owner: str, repo: str, first: int = 100) -> List[Dict]:
-    """Fetch all issues from a GitHub repository using the GraphQL API.
+    """Fetch up to `first` issues from a GitHub repository using the GraphQL API.
 
     Returns:
         A list of issues as dictionaries.
@@ -53,7 +53,7 @@ def fetch_issues(owner: str, repo: str, first: int = 100) -> List[Dict]:
     """
 
     headers = {"Authorization": f"Bearer {GITHUB_TOKEN}"}
-    variables = {"owner": owner, "name": repo, "after": None, "first": first}
+    variables = {"owner": owner, "name": repo, "after": None, "first": min(first, 100)}
 
     results = []
     while True:
@@ -72,7 +72,8 @@ def fetch_issues(owner: str, repo: str, first: int = 100) -> List[Dict]:
             raise RuntimeError(
                 f"Unexpected response structure:\n{
                     json.dumps(
-                        data, indent=2)}", )
+                        data, indent=2)}",
+            )
 
         try:
             issues = data["data"]["repository"]["issues"]["nodes"]
@@ -82,14 +83,14 @@ def fetch_issues(owner: str, repo: str, first: int = 100) -> List[Dict]:
 
         results.extend(issues)
 
-        if not page_info["hasNextPage"]:
+        if len(results) >= first or not page_info["hasNextPage"]:
             break
         variables["after"] = page_info["endCursor"]
+        variables["first"] = min(first - len(results), 100)
 
-    return results
+    return results[:first]
 
 
 def save_issues(owner: str, repo: str, issues: List[Dict]) -> None:
-    """Save issues to a JSON file in the persistent data directory.
-    """
+    """Save issues to a JSON file in the persistent data directory."""
     save_repo_data(owner, repo, issues, "issues.json")
