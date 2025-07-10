@@ -15,7 +15,7 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 
 
 PROMPT_TEMPLATE = """
-Classify each contribution (commit, issue, or pull request) into one of these categories. Base your decision **primarily** on the files changed, then on the text content.
+Classify each of the following contributions (commit, issue, or pull request) into one of these categories. Base your decision **primarily** on the files changed, then on the text content.
 
 Categories:
 1. development: new features, enhancements
@@ -57,9 +57,9 @@ Categories:
 
 **Output format:**
 Return a JSON array where each object includes:
-  - `type`: "commit" | "issue" | "pull"
-  - identifier: `hash` for commits, `number` for issues/pulls
-  - `category`
+  - `type`: "commit" | "issue" | "pull" (I provide these in the input)
+  - identifier: `hash` for commits, `number` for issues/pulls (I provide these in the input)
+  - `category` (This is the classification you determine)
 
 Input example:
 {example_input}
