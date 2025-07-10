@@ -42,8 +42,7 @@ def test_extract_all_success(
     ]
     mock_fetch_issues.return_value = [{"number": 1, "title": "Test issue"}]
     mock_fetch_pulls.return_value = [{"number": 1, "title": "Test PR"}]
-    mock_fetch_contrib.return_value = [
-        {"login": "testuser", "name": "Test User"}]
+    mock_fetch_contrib.return_value = [{"login": "testuser", "name": "Test User"}]
     client = APIClient()
     data = {"owner": "testuser", "repo": "testrepo"}
     response = client.post("/api/repo/extract_all/", data=data)
@@ -57,9 +56,9 @@ def test_extract_all_success(
     mock_clone.assert_called_once()
     mock_analyze_commits.assert_called_once_with("testuser", "testrepo")
     mock_save_commits.assert_called_once()
-    mock_fetch_issues.assert_called_once_with("testuser", "testrepo")
+    mock_fetch_issues.assert_called_once_with("testuser", "testrepo", first=50)
     mock_save_issues.assert_called_once()
-    mock_fetch_pulls.assert_called_once_with("testuser", "testrepo")
+    mock_fetch_pulls.assert_called_once_with("testuser", "testrepo", first=50)
     mock_save_pulls.assert_called_once()
     mock_fetch_contrib.assert_called_once_with("testuser", "testrepo")
     mock_save_contrib.assert_called_once()

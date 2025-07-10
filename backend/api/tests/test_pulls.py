@@ -37,7 +37,7 @@ def test_extract_pulls_success(mock_save, mock_fetch):
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
     assert response.json()["n_pulls"] == 1
-    mock_fetch.assert_called_once_with("testuser", "testrepo")
+    mock_fetch.assert_called_once_with("testuser", "testrepo", first=50)
     mock_save.assert_called_once()
 
 
@@ -51,8 +51,7 @@ def test_extract_pulls_malformed_data():
 
 
 @pytest.mark.django_db
-@patch("api.views.pulls.fetch_pulls",
-       side_effect=Exception("GitHub API error"))
+@patch("api.views.pulls.fetch_pulls", side_effect=Exception("GitHub API error"))
 def test_extract_pulls_internal_error(mock_fetch):
     client = APIClient()
     data = {"owner": "testuser", "repo": "testrepo"}
@@ -65,12 +64,7 @@ def test_save_and_load_pulls(tmp_path):
     pulls_data = [{"number": 1, "title": "PR1"}, {"number": 2, "title": "PR2"}]
     owner, repo = "user", "repo"
     # Save pulls
-    save.save_repo_data(
-        owner,
-        repo,
-        pulls_data,
-        "pulls.json",
-        base_dir=tmp_path)
+    save.save_repo_data(owner, repo, pulls_data, "pulls.json", base_dir=tmp_path)
     # Load pulls
     loaded = save.load_repo_data(owner, repo, "pulls.json", base_dir=tmp_path)
     assert loaded == pulls_data

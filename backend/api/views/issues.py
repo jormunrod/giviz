@@ -3,25 +3,25 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from api.serializers.repo import RepoQuerySerializer
+from api.serializers.repo import RepoQuerySerializer, RepoQueryWithMaxIssuesSerializer
 from api.utils.common.save import load_repo_data
 from api.utils.github.issues import fetch_issues, save_issues
 
 
-@swagger_auto_schema(method="post", request_body=RepoQuerySerializer)
+@swagger_auto_schema(method="post", request_body=RepoQueryWithMaxIssuesSerializer)
 @api_view(["POST"])
 def extract_issues_graphql(request):
-    """Extract issues from GitHub using GraphQL and save them locally.
-    """
-    serializer = RepoQuerySerializer(data=request.data)
+    """Extract issues from GitHub using GraphQL and save them locally."""
+    serializer = RepoQueryWithMaxIssuesSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     owner = serializer.validated_data["owner"]
     repo = serializer.validated_data["repo"]
+    max_issues = serializer.validated_data.get("max_issues", 50)
 
     try:
-        issues = fetch_issues(owner, repo)
+        issues = fetch_issues(owner, repo, first=max_issues)
         save_issues(owner, repo, issues)
         return Response({"status": "ok", "n_issues": len(issues)})
     except Exception as e:
@@ -31,8 +31,7 @@ def extract_issues_graphql(request):
 @swagger_auto_schema(method="get", query_serializer=RepoQuerySerializer)
 @api_view(["GET"])
 def get_issues(request):
-    """Get saved issues for a given repository.
-    """
+    """Get saved issues for a given repository."""
     serializer = RepoQuerySerializer(data=request.query_params)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -41,6 +40,5 @@ def get_issues(request):
     repo = serializer.validated_data["repo"]
     issues = load_repo_data(owner, repo, "issues.json")
     if issues is None:
-        return Response(
-            {"error": "No issues found for this repo."}, status=404)
+        return Response({"error": "No issues found for this repo."}, status=404)
     return Response({"issues": issues, "n_issues": len(issues)})

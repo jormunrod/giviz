@@ -14,9 +14,7 @@ if not GITHUB_TOKEN:
 
 
 def fetch_pulls(owner: str, repo: str, first: int = 100) -> List[Dict]:
-    """Fetch all pull requests from a GitHub repository using the GraphQL API.
-    Returns a list of pull requests as dictionaries.
-    """
+    """Fetch up to `first` pull requests from a GitHub repository using the GraphQL API."""
     query = """
     query($owner: String!, $name: String!, $after: String, $first: Int!) {
       repository(owner: $owner, name: $name) {
@@ -44,7 +42,7 @@ def fetch_pulls(owner: str, repo: str, first: int = 100) -> List[Dict]:
     }
     """
     headers = {"Authorization": f"Bearer {GITHUB_TOKEN}"}
-    variables = {"owner": owner, "name": repo, "after": None, "first": first}
+    variables = {"owner": owner, "name": repo, "after": None, "first": min(first, 100)}
     results = []
     while True:
         response = requests.post(
@@ -58,22 +56,21 @@ def fetch_pulls(owner: str, repo: str, first: int = 100) -> List[Dict]:
             raise RuntimeError(f"GraphQL error: {data['errors']}")
         if "data" not in data or not data["data"].get("repository"):
             raise RuntimeError(
-                f"Unexpected response structure:\n{
-                    json.dumps(
-                        data, indent=2)}", )
+                f"Unexpected response structure:\n{json.dumps(data, indent=2)}",
+            )
         try:
             pulls = data["data"]["repository"]["pullRequests"]["nodes"]
             page_info = data["data"]["repository"]["pullRequests"]["pageInfo"]
         except KeyError as e:
             raise RuntimeError(f"Unexpected response structure: {e}")
         results.extend(pulls)
-        if not page_info["hasNextPage"]:
+        if len(results) >= first or not page_info["hasNextPage"]:
             break
         variables["after"] = page_info["endCursor"]
-    return results
+        variables["first"] = min(first - len(results), 100)
+    return results[:first]
 
 
 def save_pulls(owner: str, repo: str, pulls: List[Dict]) -> None:
-    """Save pull requests to a JSON file in the persistent data directory.
-    """
+    """Save pull requests to a JSON file in the persistent data directory."""
     save_repo_data(owner, repo, pulls, "pulls.json")
