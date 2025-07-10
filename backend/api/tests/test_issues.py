@@ -35,5 +35,5 @@ def test_extract_issues_success(mock_save, mock_fetch):
     assert response.status_code == 200
     assert response.json()["status"] == "ok"
     assert response.json()["n_issues"] == 1
-    mock_fetch.assert_called_once_with("testuser", "testrepo")
+    mock_fetch.assert_called_once_with("testuser", "testrepo", first=50)
     mock_save.assert_called_once()
