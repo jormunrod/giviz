@@ -13,6 +13,11 @@ export default function RepoInput() {
   const { setRepoInfo } = useRepo();
   const navigate = useNavigate();
 
+  // New state for limits
+  const [maxCommits, setMaxCommits] = useState(30);
+  const [maxIssues, setMaxIssues] = useState(30);
+  const [maxPulls, setMaxPulls] = useState(30);
+
   const examples = [
     { label: "giviz", url: "https://github.com/jormunrod/giviz" },
     { label: "Rath", url: "https://github.com/rath-team/rath" },
@@ -38,7 +43,14 @@ export default function RepoInput() {
       const res = await fetch(`${API_BASE}/repo/extract_all/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ owner, repo, depth }),
+        body: JSON.stringify({
+          owner,
+          repo,
+          depth,
+          max_commits: maxCommits,
+          max_issues: maxIssues,
+          max_pulls: maxPulls,
+        }),
       });
       const data = await res.json();
       return data;
@@ -157,21 +169,72 @@ export default function RepoInput() {
 
   return (
     <Card className="max-w-3xl w-full py-8 p-6">
-      <form onSubmit={handleSubmit} className="flex items-center gap-4 mb-4">
-        <TextInput
-          value={inputUrl}
-          onChange={(e) => setInputUrl(e.target.value)}
-          placeholder="https://github.com/user/repo"
-          className="flex-grow"
-        />
-        <GivizButton
-          type="submit"
-          className="px-6 py-2 text-sm"
-          disabled={loading}
-        >
-          {loading ? "Extracting..." : "Go!"}
-        </GivizButton>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4 mb-4">
+        <div className="flex items-center gap-4">
+          <TextInput
+            value={inputUrl}
+            onChange={(e) => setInputUrl(e.target.value)}
+            placeholder="https://github.com/user/repo"
+            className="flex-grow"
+          />
+          <GivizButton
+            type="submit"
+            className="px-6 py-2 text-sm"
+            disabled={loading}
+          >
+            {loading ? "Extracting..." : "Go!"}
+          </GivizButton>
+        </div>
       </form>
+      {/* DEV LIMITS BOX - REMOVE IN PRODUCTION */}
+      <div className="mb-4">
+        <div className="bg-yellow-50 border border-yellow-300 rounded p-4 flex flex-col gap-2">
+          <div className="text-xs text-yellow-800 font-semibold mb-1">
+            Development only: Extraction limits (will be removed in production)
+          </div>
+          <div className="flex flex-wrap gap-4 items-center">
+            <div className="flex flex-col items-start">
+              <label className="text-xs font-medium mb-1" htmlFor="max-commits">
+                Max commits
+              </label>
+              <input
+                id="max-commits"
+                type="number"
+                min={1}
+                value={maxCommits}
+                onChange={(e) => setMaxCommits(Number(e.target.value))}
+                className="w-20 border rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-givizPurple"
+              />
+            </div>
+            <div className="flex flex-col items-start">
+              <label className="text-xs font-medium mb-1" htmlFor="max-issues">
+                Max issues
+              </label>
+              <input
+                id="max-issues"
+                type="number"
+                min={1}
+                value={maxIssues}
+                onChange={(e) => setMaxIssues(Number(e.target.value))}
+                className="w-20 border rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-givizPurple"
+              />
+            </div>
+            <div className="flex flex-col items-start">
+              <label className="text-xs font-medium mb-1" htmlFor="max-pulls">
+                Max PRs
+              </label>
+              <input
+                id="max-pulls"
+                type="number"
+                min={1}
+                value={maxPulls}
+                onChange={(e) => setMaxPulls(Number(e.target.value))}
+                className="w-20 border rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-givizPurple"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
       {loading && (
         <LoadingSpinner text={step || "Extracting repository data..."} />
       )}
