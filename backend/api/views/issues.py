@@ -11,8 +11,7 @@ from api.utils.github.issues import fetch_issues, save_issues
 @swagger_auto_schema(method="post", request_body=RepoQueryWithMaxIssuesSerializer)
 @api_view(["POST"])
 def extract_issues_graphql(request):
-    """Extract issues from GitHub using GraphQL and save them locally.
-    """
+    """Extract issues from GitHub using GraphQL and save them locally."""
     serializer = RepoQueryWithMaxIssuesSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -32,8 +31,7 @@ def extract_issues_graphql(request):
 @swagger_auto_schema(method="get", query_serializer=RepoQuerySerializer)
 @api_view(["GET"])
 def get_issues(request):
-    """Get saved issues for a given repository.
-    """
+    """Get saved issues for a given repository."""
     serializer = RepoQuerySerializer(data=request.query_params)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -42,6 +40,5 @@ def get_issues(request):
     repo = serializer.validated_data["repo"]
     issues = load_repo_data(owner, repo, "issues.json")
     if issues is None:
-        return Response(
-            {"error": "No issues found for this repo."}, status=404)
+        return Response({"error": "No issues found for this repo."}, status=404)
     return Response({"issues": issues, "n_issues": len(issues)})

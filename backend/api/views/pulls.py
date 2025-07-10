@@ -11,8 +11,7 @@ from api.utils.github.pulls import fetch_pulls, save_pulls
 @swagger_auto_schema(method="post", request_body=RepoQueryWithMaxPullsSerializer)
 @api_view(["POST"])
 def extract_pulls_graphql(request):
-    """Extract pull requests from GitHub using GraphQL and save them locally.
-    """
+    """Extract pull requests from GitHub using GraphQL and save them locally."""
     serializer = RepoQueryWithMaxPullsSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -32,8 +31,7 @@ def extract_pulls_graphql(request):
 @swagger_auto_schema(method="get", query_serializer=RepoQuerySerializer)
 @api_view(["GET"])
 def get_pulls(request):
-    """Get saved pull requests for a given repository.
-    """
+    """Get saved pull requests for a given repository."""
     serializer = RepoQuerySerializer(data=request.query_params)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -42,6 +40,5 @@ def get_pulls(request):
     repo = serializer.validated_data["repo"]
     pulls = load_repo_data(owner, repo, "pulls.json")
     if pulls is None:
-        return Response(
-            {"error": "No pull requests found for this repo."}, status=404)
+        return Response({"error": "No pull requests found for this repo."}, status=404)
     return Response({"pulls": pulls, "n_pulls": len(pulls)})

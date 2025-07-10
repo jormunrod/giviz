@@ -3,7 +3,10 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from api.serializers.repo import RepoQuerySerializer, RepoQueryWithDepthSerializer, RepoQueryWithMaxCommitsSerializer
+from api.serializers.repo import (
+    RepoQuerySerializer,
+    RepoQueryWithMaxCommitsSerializer,
+)
 from api.utils.common.save import load_repo_data
 from api.utils.git.commits import analyze_commits, save_commits
 from api.utils.git.repo import clone_or_update_repo
@@ -44,15 +47,15 @@ def extract_commits(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
-    return Response({"status": "ok", "commits_analyzed": len(
-        commits), "repo": f"{owner}/{repo}"}, )
+    return Response(
+        {"status": "ok", "commits_analyzed": len(commits), "repo": f"{owner}/{repo}"},
+    )
 
 
 @swagger_auto_schema(method="get", query_serializer=RepoQuerySerializer)
 @api_view(["GET"])
 def get_commits(request):
-    """Get saved commits for a given repository.
-    """
+    """Get saved commits for a given repository."""
     serializer = RepoQuerySerializer(data=request.query_params)
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -61,6 +64,5 @@ def get_commits(request):
     repo = serializer.validated_data["repo"]
     commits = load_repo_data(owner, repo, "commits.json")
     if commits is None:
-        return Response(
-            {"error": "No commits found for this repo."}, status=404)
+        return Response({"error": "No commits found for this repo."}, status=404)
     return Response({"commits": commits, "n_commits": len(commits)})

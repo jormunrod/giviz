@@ -8,7 +8,6 @@ from rest_framework.response import Response
 
 from api.serializers.repo import (
     RepoQuerySerializer,
-    RepoQueryWithDepthSerializer,
     RepoQueryWithLimitsSerializer,
 )
 from api.utils.git.commits import analyze_commits, save_commits
