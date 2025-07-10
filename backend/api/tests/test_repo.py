@@ -42,8 +42,7 @@ def test_extract_all_success(
     ]
     mock_fetch_issues.return_value = [{"number": 1, "title": "Test issue"}]
     mock_fetch_pulls.return_value = [{"number": 1, "title": "Test PR"}]
-    mock_fetch_contrib.return_value = [
-        {"login": "testuser", "name": "Test User"}]
+    mock_fetch_contrib.return_value = [{"login": "testuser", "name": "Test User"}]
     client = APIClient()
     data = {"owner": "testuser", "repo": "testrepo"}
     response = client.post("/api/repo/extract_all/", data=data)
