@@ -70,10 +70,17 @@ export default function ContributorsRolesBarChart({ owner, repo }) {
             });
           }
         });
-        const chartData = Object.entries(roleMap).map(([role, count]) => ({
+        let chartData = Object.entries(roleMap).map(([role, count]) => ({
           role,
           count,
         }));
+        if (
+          contributorsArr.length === 1 &&
+          chartData.length === 0 &&
+          contributorsArr[0].mainRole
+        ) {
+          chartData = [{ role: contributorsArr[0].mainRole, count: 1 }];
+        }
         setRoleCounts(chartData);
         setContributorsList(contributorsArr);
       } catch {
@@ -128,7 +135,7 @@ export default function ContributorsRolesBarChart({ owner, repo }) {
           </div>
           <ResponsiveContainer
             width="100%"
-            height={Math.min(60 * roleCounts.length, 400)}
+            height={Math.max(Math.min(60 * roleCounts.length, 400), 120)}
           >
             <BarChart
               data={roleCounts}
