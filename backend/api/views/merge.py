@@ -44,11 +44,11 @@ def get_contrib_id(contrib, name_to_login=None):
     return str(contrib)
 
 
-@swagger_auto_schema(method="get", query_serializer=RepoQuerySerializer)
-@api_view(["GET"])
+@swagger_auto_schema(method="post", request_body=RepoQuerySerializer)
+@api_view(["POST"])
 def contributors_by_category_view(request):
     """Returns, for each contributor, grouped by category, the hashes or identifiers of each issue, pull request, or commit they have made."""
-    serializer = RepoQuerySerializer(data=request.query_params)
+    serializer = RepoQuerySerializer(data=request.data)
     if not serializer.is_valid():
         return Response(
             {"error": "Missing or invalid parameters", "detail": serializer.errors},
