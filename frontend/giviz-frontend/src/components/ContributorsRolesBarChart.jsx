@@ -228,7 +228,23 @@ export default function ContributorsRolesBarChart({ owner, repo }) {
                     className="grid grid-cols-3 gap-2 py-2 text-sm items-center text-left"
                   >
                     <span className="font-mono font-bold">{username}</span>
-                    <span className="text-givizBlue4 font-semibold">
+                    <span
+                      className={`text-givizBlue4 font-semibold cursor-pointer transition underline-offset-2 ${
+                        selectedRole === mainRole
+                          ? "underline"
+                          : "hover:underline"
+                      }`}
+                      onClick={() => {
+                        if (selectedRole === mainRole) {
+                          setSelectedRole(null);
+                          setCurrentPage(1);
+                        } else {
+                          setSelectedRole(mainRole);
+                          setCurrentPage(1);
+                        }
+                      }}
+                      title="Filter by this role"
+                    >
                       {mainRole}
                     </span>
                     <span className="text-gray-600">
