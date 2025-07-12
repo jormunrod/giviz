@@ -66,9 +66,23 @@ export default function TopContributorsByRole({ contributors }) {
       <h2 className="text-2xl font-extrabold text-center mb-8 text-givizBlue4 tracking-wide">
         Top 3 Contributors by Role
       </h2>
-      <div className="w-full rounded-2xl p-7 flex flex-col gap-8">
+      <div className="w-full rounded-2xl p-7 flex flex-col gap-4 bg-white/80">
+        <div className="flex flex-row items-center gap-6 w-full mb-2">
+          <div className="min-w-[120px]" />
+          <div className="flex flex-row gap-4 w-full justify-center">
+            <div className="flex flex-col items-center min-w-[100px]">
+              <span className="text-3xl">🥇</span>
+            </div>
+            <div className="flex flex-col items-center min-w-[100px]">
+              <span className="text-3xl">🥈</span>
+            </div>
+            <div className="flex flex-col items-center min-w-[100px]">
+              <span className="text-3xl">🥉</span>
+            </div>
+          </div>
+        </div>
         {Object.entries(ROLE_LABELS).map(([roleKey, label]) => {
-          const top = getTopContributorsByRole(contributors, roleKey, 3);
+          const top = getTopContributorsByRole(contributors, roleKey, 3) || [];
           return (
             <div
               key={roleKey}
@@ -80,27 +94,21 @@ export default function TopContributorsByRole({ contributors }) {
                   {label}
                 </span>
               </div>
-              <div className="flex flex-row gap-4 w-full">
+              <div className="flex flex-row gap-4 w-full justify-center">
                 {[0, 1, 2].map((idx) => {
                   const user = top[idx];
-                  let medalBg = "";
                   let medalText = "";
                   if (idx === 0) {
-                    medalBg = "bg-gradient-to-br from-yellow-300 to-yellow-500";
                     medalText = "text-yellow-700";
                   } else if (idx === 1) {
-                    medalBg = "bg-gradient-to-br from-gray-300 to-gray-400";
                     medalText = "text-gray-700";
                   } else if (idx === 2) {
-                    medalBg = "bg-gradient-to-br from-orange-300 to-orange-500";
                     medalText = "text-orange-700";
                   }
                   return (
                     <div
                       key={user ? user.username : idx}
-                      className={`flex flex-col items-center justify-center px-4 py-2 rounded-lg min-w-[100px] bg-transparent ${
-                        user ? medalBg : ""
-                      }`}
+                      className={`flex flex-col items-center justify-center min-w-[100px]`}
                     >
                       <span
                         className={`inline-block font-semibold text-base mb-1 ${
@@ -108,13 +116,6 @@ export default function TopContributorsByRole({ contributors }) {
                         }`}
                       >
                         {user ? user.username : "-"}
-                      </span>
-                      <span
-                        className={`px-2 py-0.5 ${
-                          user ? medalBg : "bg-gray-200"
-                        } text-xs rounded-full font-bold text-white`}
-                      >
-                        {idx === 0 ? "🥇" : idx === 1 ? "🥈" : "🥉"}
                       </span>
                       <span className="text-gray-600 font-mono text-sm mt-1">
                         {user ? `${user.total} pts` : ""}
