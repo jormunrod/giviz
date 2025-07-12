@@ -8,6 +8,7 @@ import {
   CartesianGrid,
   ResponsiveContainer,
   LabelList,
+  Cell,
 } from "recharts";
 import GivizButton from "./GivizButton";
 
@@ -78,6 +79,16 @@ export default function ContributorsRolesBarChart({ owner, repo }) {
     if (owner && repo) fetchEffortData();
   }, [owner, repo]);
 
+  const COLORS = [
+    "#0088FE",
+    "#00C49F",
+    "#FFBB28",
+    "#FF8042",
+    "#A28CFF",
+    "#FF6699",
+    "#00B8D9",
+  ];
+
   return (
     <div className="w-full max-w-2xl flex flex-col items-center">
       {loading ? (
@@ -91,17 +102,27 @@ export default function ContributorsRolesBarChart({ owner, repo }) {
               Roles detected: {roleCounts.length}
             </span>
           </div>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer
+            width="100%"
+            height={Math.min(60 * roleCounts.length, 400)}
+          >
             <BarChart
               data={roleCounts}
               layout="vertical"
-              margin={{ left: 40, right: 40 }}
+              margin={{ left: 80, right: 40, top: 20, bottom: 20 }}
+              barCategoryGap={10}
             >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis type="number" allowDecimals={false} />
-              <YAxis type="category" dataKey="role" />
+              <YAxis type="category" dataKey="role" interval={0} width={120} />
               <Tooltip />
-              <Bar dataKey="count" fill="#8884d8">
+              <Bar dataKey="count" barSize={22}>
+                {roleCounts.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS[index % COLORS.length]}
+                  />
+                ))}
                 <LabelList dataKey="count" position="right" />
               </Bar>
             </BarChart>
