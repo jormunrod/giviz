@@ -121,9 +121,9 @@ export default function Contributor() {
             </div>
           </div>
         )}
-        <div className="w-full mt-4 bg-gray-100 p-6 rounded-2xl shadow-inner flex flex-col items-center">
+        <div className="w-full mt-4 p-6 rounded-2xl flex flex-col items-center">
           <span className="font-semibold text-gray-700 mb-4">
-            Roles & dedication breakdown
+            Collaborative Roles
           </span>
           {repoInfo?.owner && repoInfo?.repo && username && (
             <div className="w-full max-w-md">
