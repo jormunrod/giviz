@@ -1,4 +1,5 @@
 import React from "react";
+import { useState } from "react";
 
 const ROLE_LABELS = {
   development: "Developer",
@@ -10,15 +11,16 @@ function getTopContributorsByRole(contributorsData, roleKey, topN = 3) {
   const result = [];
   for (const [username, roles] of Object.entries(contributorsData || {})) {
     if (roles[roleKey]) {
-      const { commits = 0, issues = 0, pulls = 0 } = roles[roleKey];
+      const { commits = 0, issues = 0, pulls = 0, dedication } = roles[roleKey];
       const total = commits + issues + pulls;
-      result.push({ username, total });
+      result.push({ username, total, commits, issues, pulls, dedication });
     }
   }
   return result.sort((a, b) => b.total - a.total).slice(0, topN);
 }
 
 export default function TopContributorsByRole({ contributors }) {
+  const [hovered, setHovered] = useState({ username: null, roleKey: null });
   const ROLE_ICONS = {
     development: (
       <span className="inline-block mr-2 text-givizBlue4">
@@ -66,7 +68,7 @@ export default function TopContributorsByRole({ contributors }) {
       <h2 className="text-2xl font-extrabold text-center mb-8 text-givizBlue4 tracking-wide">
         Top 3 Contributors by Role
       </h2>
-      <div className="w-full rounded-2xl p-7 flex flex-col gap-4 bg-white/80">
+      <div className="w-full rounded-2xl p-7 flex flex-col gap-4">
         <div className="flex flex-row items-center gap-6 w-full mb-2">
           <div className="min-w-[120px]" />
           <div className="flex flex-row gap-4 w-full justify-center">
@@ -108,18 +110,48 @@ export default function TopContributorsByRole({ contributors }) {
                   return (
                     <div
                       key={user ? user.username : idx}
-                      className={`flex flex-col items-center justify-center min-w-[100px]`}
+                      className="flex flex-col items-center justify-center min-w-[100px] relative"
+                      onMouseEnter={() =>
+                        user && setHovered({ username: user.username, roleKey })
+                      }
+                      onMouseLeave={() =>
+                        setHovered({ username: null, roleKey: null })
+                      }
                     >
                       <span
-                        className={`inline-block font-semibold text-base mb-1 ${
+                        className={`inline-block font-semibold text-base mb-1 max-w-[90px] truncate ${
                           user ? medalText : "text-gray-400"
                         }`}
+                        style={{ cursor: user ? "pointer" : "default" }}
+                        title={user ? user.username : "-"}
                       >
                         {user ? user.username : "-"}
                       </span>
                       <span className="text-gray-600 font-mono text-sm mt-1">
                         {user ? `${user.total} pts` : ""}
                       </span>
+                      {user &&
+                        hovered.username === user.username &&
+                        hovered.roleKey === roleKey && (
+                          <div className="absolute left-1/2 -translate-x-1/2 top-10 z-10 bg-white/90 text-gray-800 rounded-lg shadow-lg border border-gray-200 px-3 py-2 text-xs whitespace-pre">
+                            <div>
+                              <span className="font-bold">Username:</span>{" "}
+                              {user.username}
+                            </div>
+                            <div>
+                              <span className="font-bold">Commits points:</span>{" "}
+                              {user.commits}
+                            </div>
+                            <div>
+                              <span className="font-bold">Issues points:</span>{" "}
+                              {user.issues}
+                            </div>
+                            <div>
+                              <span className="font-bold">Pulls points:</span>{" "}
+                              {user.pulls}
+                            </div>
+                          </div>
+                        )}
                     </div>
                   );
                 })}
