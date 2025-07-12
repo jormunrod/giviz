@@ -10,4 +10,5 @@ urlpatterns = [
     path("contributors/", include("api.urls.contributors")),
     path("repo/", include("api.urls.repo")),
     path("analysis/", include("api.urls.analysis")),
+    path("merge/", include("api.urls.merge")),
 ]
