@@ -40,7 +40,6 @@ export default function ContributorsRolesBarChart({ owner, repo }) {
         );
         const data = await res.json();
         const contributors = data.contributors || {};
-        // contributors: { username: { category: { ... } } }
         const roleMap = {};
         const contributorsArr = [];
         Object.entries(contributors).forEach(([username, categories]) => {
