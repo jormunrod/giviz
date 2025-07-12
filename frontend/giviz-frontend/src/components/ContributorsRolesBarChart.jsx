@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   BarChart,
   Bar,
@@ -11,18 +11,12 @@ import {
   Cell,
 } from "recharts";
 import GivizButton from "./GivizButton";
-import { useNavigate } from "react-router-dom";
 
 const API_BASE =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
 const PAGE_SIZE = 4;
 
-export default function ContributorsRolesBarChart({
-  owner,
-  repo,
-  onSelectContributor,
-}) {
-  const navigate = useNavigate();
+export default function ContributorsRolesBarChart({ owner, repo }) {
   const [roleCounts, setRoleCounts] = useState([]);
   const [contributorsList, setContributorsList] = useState([]);
   const [loading, setLoading] = useState(true);
