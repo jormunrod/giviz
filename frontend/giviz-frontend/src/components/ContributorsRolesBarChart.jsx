@@ -107,7 +107,9 @@ export default function ContributorsRolesBarChart({ owner, repo }) {
         <>
           <div className="w-full flex justify-between items-center mb-2">
             <span className="text-xs text-gray-500">
-              Roles detected: {roleCounts.length}
+              Contributors analyzed: {contributorsList.length}
+              <span className="mx-2">|</span> Roles detected:{" "}
+              {roleCounts.length}
             </span>
           </div>
           <ResponsiveContainer
