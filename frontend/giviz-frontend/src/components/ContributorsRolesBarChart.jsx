@@ -21,9 +21,13 @@ export default function ContributorsRolesBarChart({ owner, repo }) {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [activeIndex, setActiveIndex] = useState(null);
+  const [selectedRole, setSelectedRole] = useState(null);
   const pageSize = 6;
-  const totalPages = Math.ceil(contributorsList.length / pageSize);
-  const paginatedContributors = contributorsList.slice(
+  const filteredContributors = selectedRole
+    ? contributorsList.filter((c) => c.mainRole === selectedRole)
+    : contributorsList;
+  const totalPages = Math.ceil(filteredContributors.length / pageSize);
+  const paginatedContributors = filteredContributors.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
@@ -90,6 +94,8 @@ export default function ContributorsRolesBarChart({ owner, repo }) {
     "#00B8D9",
   ];
 
+  const getGlobalIndex = (role) => roleCounts.findIndex((r) => r.role === role);
+
   return (
     <div className="w-full max-w-2xl flex flex-col items-center">
       {loading ? (
@@ -124,7 +130,10 @@ export default function ContributorsRolesBarChart({ owner, repo }) {
                         className="font-semibold"
                         style={{
                           color:
-                            COLORS[payload[0].payload.index % COLORS.length],
+                            COLORS[
+                              getGlobalIndex(payload[0].payload.role) %
+                                COLORS.length
+                            ],
                         }}
                       >
                         {payload[0].payload.role}
@@ -143,25 +152,63 @@ export default function ContributorsRolesBarChart({ owner, repo }) {
                 onMouseOver={(_, idx) => setActiveIndex(idx)}
                 onMouseOut={() => setActiveIndex(null)}
               >
-                {roleCounts.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={COLORS[index % COLORS.length]}
-                    style={
-                      activeIndex === index
-                        ? {
-                            filter:
-                              "drop-shadow(0 4px 16px #3b82f680) drop-shadow(0 1px 4px #64748b40)",
-                            cursor: "pointer",
-                          }
-                        : { cursor: "pointer" }
-                    }
-                  />
-                ))}
+                {roleCounts.map((entry, index) => {
+                  const isSelected = selectedRole === entry.role;
+                  return (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                      style={
+                        isSelected
+                          ? {
+                              filter:
+                                "drop-shadow(0 4px 16px #3b82f680) drop-shadow(0 1px 4px #64748b40)",
+                              cursor: "pointer",
+                              opacity: 1,
+                            }
+                          : selectedRole
+                          ? {
+                              opacity: 0.3,
+                              cursor: "pointer",
+                            }
+                          : activeIndex === index
+                          ? {
+                              filter:
+                                "drop-shadow(0 4px 16px #3b82f680) drop-shadow(0 1px 4px #64748b40)",
+                              cursor: "pointer",
+                            }
+                          : { cursor: "pointer" }
+                      }
+                      onClick={() => {
+                        setSelectedRole(entry.role);
+                        setCurrentPage(1);
+                      }}
+                    />
+                  );
+                })}
                 <LabelList dataKey="count" position="right" />
               </Bar>
             </BarChart>
           </ResponsiveContainer>
+          {selectedRole && (
+            <div className="w-full flex flex-col items-center mt-2">
+              <div className="flex flex-row items-center gap-3 justify-center">
+                <span className="text-xs text-blue-600 font-semibold">
+                  Filtered by: {selectedRole}
+                </span>
+                <GivizButton
+                  variant="secondary"
+                  className="px-3 py-1 text-sm"
+                  onClick={() => {
+                    setSelectedRole(null);
+                    setCurrentPage(1);
+                  }}
+                >
+                  Clear filter
+                </GivizButton>
+              </div>
+            </div>
+          )}
           <div className="mt-8 w-full flex flex-col items-center">
             <div className="grid grid-cols-3 gap-2 px-2 mb-2 text-xs font-semibold text-gray-500 w-full max-w-md mx-auto text-left">
               <div>Username</div>
