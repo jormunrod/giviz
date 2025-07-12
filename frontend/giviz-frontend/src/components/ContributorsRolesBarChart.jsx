@@ -20,6 +20,7 @@ export default function ContributorsRolesBarChart({ owner, repo }) {
   const [contributorsList, setContributorsList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [activeIndex, setActiveIndex] = useState(null);
   const pageSize = 6;
   const totalPages = Math.ceil(contributorsList.length / pageSize);
   const paginatedContributors = contributorsList.slice(
@@ -115,12 +116,46 @@ export default function ContributorsRolesBarChart({ owner, repo }) {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis type="number" allowDecimals={false} />
               <YAxis type="category" dataKey="role" interval={0} width={120} />
-              <Tooltip />
-              <Bar dataKey="count" barSize={22}>
+              <Tooltip
+                content={({ active, payload }) =>
+                  active && payload && payload.length ? (
+                    <div className="bg-white border border-gray-200 rounded-lg shadow-md px-3 py-2 text-sm">
+                      <div
+                        className="font-semibold"
+                        style={{
+                          color:
+                            COLORS[payload[0].payload.index % COLORS.length],
+                        }}
+                      >
+                        {payload[0].payload.role}
+                      </div>
+                      <div className="text-gray-700">
+                        Contributors:{" "}
+                        <span className="font-bold">{payload[0].value}</span>
+                      </div>
+                    </div>
+                  ) : null
+                }
+              />
+              <Bar
+                dataKey="count"
+                barSize={22}
+                onMouseOver={(_, idx) => setActiveIndex(idx)}
+                onMouseOut={() => setActiveIndex(null)}
+              >
                 {roleCounts.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
                     fill={COLORS[index % COLORS.length]}
+                    style={
+                      activeIndex === index
+                        ? {
+                            filter:
+                              "drop-shadow(0 4px 16px #3b82f680) drop-shadow(0 1px 4px #64748b40)",
+                            cursor: "pointer",
+                          }
+                        : { cursor: "pointer" }
+                    }
                   />
                 ))}
                 <LabelList dataKey="count" position="right" />
