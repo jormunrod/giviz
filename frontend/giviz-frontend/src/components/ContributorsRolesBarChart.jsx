@@ -11,11 +11,17 @@ import {
   Cell,
 } from "recharts";
 import GivizButton from "./GivizButton";
+import { useNavigate } from "react-router-dom";
 
 const API_BASE =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
 
-export default function ContributorsRolesBarChart({ owner, repo }) {
+export default function ContributorsRolesBarChart({
+  owner,
+  repo,
+  onSelectContributor,
+}) {
+  const navigate = useNavigate();
   const [roleCounts, setRoleCounts] = useState([]);
   const [contributorsList, setContributorsList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -227,7 +233,19 @@ export default function ContributorsRolesBarChart({ owner, repo }) {
                     key={username}
                     className="grid grid-cols-3 gap-2 py-2 text-sm items-center text-left"
                   >
-                    <span className="font-mono font-bold">{username}</span>
+                    <span
+                      className="font-mono font-bold cursor-pointer hover:underline text-givizBlue4"
+                      title="View contributor GitHub profile"
+                      onClick={() => {
+                        window.open(
+                          `https://github.com/${username}`,
+                          "_blank",
+                          "noopener,noreferrer"
+                        );
+                      }}
+                    >
+                      {username}
+                    </span>
                     <span
                       className={`text-givizBlue4 font-semibold cursor-pointer transition underline-offset-2 ${
                         selectedRole === mainRole
