@@ -150,6 +150,9 @@ export default function Analysis() {
         />
       </Card>
       <Card className="mt-8 w-full max-w-2xl flex flex-col items-center">
+        <h2 className="text-xl font-semibold text-center mr-2">
+          Top 3 Contributors by Role
+        </h2>
         {loadingRoleContrib ? (
           <div className="text-center">Loading top contributors by role...</div>
         ) : roleContributors ? (

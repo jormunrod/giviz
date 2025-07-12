@@ -46,9 +46,6 @@ export default function TopContributorsByRole({ contributors }) {
 
   return (
     <div className="w-full flex flex-col items-center py-6">
-      <h2 className="text-2xl font-extrabold text-center mb-8 text-givizBlue4 tracking-wide">
-        Top 3 Contributors by Role
-      </h2>
       <div className="mb-6 w-full max-w-lg flex flex-wrap gap-3 justify-center">
         {allRoles.map((roleKey) => (
           <label
