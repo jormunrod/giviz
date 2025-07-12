@@ -150,9 +150,14 @@ export default function Analysis() {
         />
       </Card>
       <Card className="mt-8 w-full max-w-2xl flex flex-col items-center">
-        <h2 className="text-xl font-semibold text-center mr-2">
-          Top 3 Contributors by Role
-        </h2>
+        <div className="flex items-center mb-4">
+          <h2 className="text-xl font-semibold text-center mr-2">
+            Top 3 Contributors by Role
+          </h2>
+          <InfoTooltip
+            text={`This chart shows the top 3 contributors for each role detected in the repository. Roles are assigned by AI based on the amount of lines added and deleted, issues opened, and pull requests merged.`}
+          />
+        </div>
         {loadingRoleContrib ? (
           <div className="text-center">Loading top contributors by role...</div>
         ) : roleContributors ? (
