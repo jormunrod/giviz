@@ -65,21 +65,20 @@ export default function TopContributorsByRole({ contributors }) {
         ))}
       </div>
       <div className="w-full rounded-2xl p-7 flex flex-col gap-4">
-        <div className="flex flex-row items-center gap-6 w-full mb-2">
-          <div className="min-w-[120px]" />
-          <div className="flex flex-row gap-4 w-full justify-center">
-            <div className="flex flex-col items-center min-w-[100px]">
-              <span className="text-3xl">🥇</span>
+        <div className="flex flex-row items-center gap-4 w-full mb-2">
+          <div className="min-w-[100px]" />
+          <div className="flex flex-row gap-2 w-full justify-center">
+            <div className="flex flex-col items-center min-w-[120px] max-w-[160px]">
+              <span className="text-2xl">🥇</span>
             </div>
-            <div className="flex flex-col items-center min-w-[100px]">
-              <span className="text-3xl">🥈</span>
+            <div className="flex flex-col items-center min-w-[120px] max-w-[160px]">
+              <span className="text-2xl">🥈</span>
             </div>
-            <div className="flex flex-col items-center min-w-[100px]">
-              <span className="text-3xl">🥉</span>
+            <div className="flex flex-col items-center min-w-[120px] max-w-[160px]">
+              <span className="text-2xl">🥉</span>
             </div>
           </div>
         </div>
-        {/* Mostrar solo los roles seleccionados */}
         {selectedRoles.map((roleKey) => {
           const top = getTopContributorsByRole(contributors, roleKey, 3) || [];
           return (
@@ -88,11 +87,11 @@ export default function TopContributorsByRole({ contributors }) {
               className="flex flex-row items-center gap-6 w-full"
             >
               <div className="flex items-center min-w-[120px]">
-                <span className="text-lg font-bold text-givizBlue4 uppercase tracking-wide drop-shadow">
+                <span className="text-base font-semibold text-givizBlue4 uppercase tracking-wide drop-shadow">
                   {getRoleLabel(roleKey)}
                 </span>
               </div>
-              <div className="flex flex-row gap-4 w-full justify-center">
+              <div className="flex flex-row gap-2 w-full justify-center">
                 {[0, 1, 2].map((idx) => {
                   const user = top[idx];
                   let medalText = "";
@@ -106,7 +105,7 @@ export default function TopContributorsByRole({ contributors }) {
                   return (
                     <div
                       key={user ? user.username : idx}
-                      className="flex flex-col items-center justify-center min-w-[100px] relative"
+                      className="flex flex-col items-center justify-center min-w-[120px] max-w-[160px] relative"
                       onMouseEnter={() =>
                         user && setHovered({ username: user.username, roleKey })
                       }
@@ -115,7 +114,7 @@ export default function TopContributorsByRole({ contributors }) {
                       }
                     >
                       <span
-                        className={`inline-block font-semibold text-base mb-1 max-w-[90px] truncate ${
+                        className={`inline-block font-semibold text-base mb-1 max-w-[140px] truncate ${
                           user ? medalText : "text-gray-400"
                         }`}
                         style={{ cursor: user ? "pointer" : "default" }}
