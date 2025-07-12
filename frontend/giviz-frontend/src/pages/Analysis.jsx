@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import TopContributorsByRole from "../components/TopContributorsByRole";
 import { useNavigate } from "react-router-dom";
 import { useRepo } from "../hooks/useRepo";
 import EffortPieChart from "../components/EffortPieChart";
@@ -12,6 +13,8 @@ export default function Analysis() {
   const globalEffortPercentages = repoInfo?.analysis?.globalEffortPercentages;
   const [contributors, setContributors] = useState([]);
   const [loadingContrib, setLoadingContrib] = useState(false);
+  const [roleContributors, setRoleContributors] = useState(null);
+  const [loadingRoleContrib, setLoadingRoleContrib] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -33,7 +36,32 @@ export default function Analysis() {
         setLoadingContrib(false);
       }
     }
+    async function fetchRoleContributors() {
+      if (!repoInfo?.owner || !repoInfo?.repo) return;
+      setLoadingRoleContrib(true);
+      try {
+        const API_BASE =
+          import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
+        const url = `${API_BASE}/merge/contributors_effort_by_category/`;
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ owner: repoInfo.owner, repo: repoInfo.repo }),
+        });
+        const data = await res.json();
+        if (data && data.contributors) {
+          setRoleContributors(data.contributors);
+        } else {
+          setRoleContributors(null);
+        }
+      } catch {
+        setRoleContributors(null);
+      } finally {
+        setLoadingRoleContrib(false);
+      }
+    }
     fetchContributors();
+    fetchRoleContributors();
   }, [repoInfo]);
 
   function handleSelectContributor(username) {
@@ -120,6 +148,25 @@ export default function Analysis() {
           owner={repoInfo?.owner}
           repo={repoInfo?.repo}
         />
+      </Card>
+      <Card className="mt-8 w-full max-w-2xl flex flex-col items-center">
+        <div className="flex items-center mb-4">
+          <h2 className="text-xl font-semibold text-center mr-2">
+            Top 3 Contributors by Role
+          </h2>
+          <InfoTooltip
+            text={`This chart shows the top 3 contributors for each role detected in the repository. Roles are assigned by AI based on the amount of lines added and deleted, issues opened, and pull requests merged.`}
+          />
+        </div>
+        {loadingRoleContrib ? (
+          <div className="text-center">Loading top contributors by role...</div>
+        ) : roleContributors ? (
+          <TopContributorsByRole contributors={roleContributors} />
+        ) : (
+          <div className="text-center text-gray-400">
+            No contributor data available for top roles.
+          </div>
+        )}
       </Card>
     </div>
   );
