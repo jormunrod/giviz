@@ -1,11 +1,23 @@
-import React from "react";
-import { useState } from "react";
+import React, { useState, useMemo } from "react";
 
-const ROLE_LABELS = {
-  development: "Developer",
-  testing: "Tester",
-  documentation: "Docs",
-};
+function getAllRoles(contributorsData) {
+  const rolesSet = new Set();
+  Object.values(contributorsData || {}).forEach((roles) => {
+    Object.keys(roles).forEach((role) => rolesSet.add(role));
+  });
+  return Array.from(rolesSet);
+}
+
+function getRoleLabel(roleKey) {
+  const defaultLabels = {
+    development: "Developer",
+    testing: "Tester",
+    documentation: "Docs",
+  };
+  return (
+    defaultLabels[roleKey] || roleKey.charAt(0).toUpperCase() + roleKey.slice(1)
+  );
+}
 
 function getTopContributorsByRole(contributorsData, roleKey, topN = 3) {
   const result = [];
@@ -21,46 +33,15 @@ function getTopContributorsByRole(contributorsData, roleKey, topN = 3) {
 
 export default function TopContributorsByRole({ contributors }) {
   const [hovered, setHovered] = useState({ username: null, roleKey: null });
-  const ROLE_ICONS = {
-    development: (
-      <span className="inline-block mr-2 text-givizBlue4">
-        <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
-          <path
-            d="M8 17l-5-5 5-5M16 7l5 5-5 5"
-            stroke="#2563eb"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </span>
-    ),
-    testing: (
-      <span className="inline-block mr-2 text-green-500">
-        <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
-          <path
-            d="M9 12l2 2 4-4"
-            stroke="#22c55e"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </span>
-    ),
-    documentation: (
-      <span className="inline-block mr-2 text-yellow-500">
-        <svg width="22" height="22" fill="none" viewBox="0 0 24 24">
-          <path
-            d="M7 7h10M7 11h10M7 15h6"
-            stroke="#eab308"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </span>
-    ),
+  const allRoles = useMemo(() => getAllRoles(contributors), [contributors]);
+  const [selectedRoles, setSelectedRoles] = useState(() => allRoles);
+
+  const handleRoleToggle = (roleKey) => {
+    setSelectedRoles((prev) =>
+      prev.includes(roleKey)
+        ? prev.filter((r) => r !== roleKey)
+        : [...prev, roleKey]
+    );
   };
 
   return (
@@ -68,6 +49,24 @@ export default function TopContributorsByRole({ contributors }) {
       <h2 className="text-2xl font-extrabold text-center mb-8 text-givizBlue4 tracking-wide">
         Top 3 Contributors by Role
       </h2>
+      <div className="mb-6 w-full max-w-lg flex flex-wrap gap-3 justify-center">
+        {allRoles.map((roleKey) => (
+          <label
+            key={roleKey}
+            className="flex items-center gap-2 bg-gray-100 rounded px-2 py-1 cursor-pointer"
+          >
+            <input
+              type="checkbox"
+              checked={selectedRoles.includes(roleKey)}
+              onChange={() => handleRoleToggle(roleKey)}
+              className="accent-givizBlue4"
+            />
+            <span className="text-sm font-medium text-gray-700">
+              {getRoleLabel(roleKey)}
+            </span>
+          </label>
+        ))}
+      </div>
       <div className="w-full rounded-2xl p-7 flex flex-col gap-4">
         <div className="flex flex-row items-center gap-6 w-full mb-2">
           <div className="min-w-[120px]" />
@@ -83,7 +82,8 @@ export default function TopContributorsByRole({ contributors }) {
             </div>
           </div>
         </div>
-        {Object.entries(ROLE_LABELS).map(([roleKey, label]) => {
+        {/* Mostrar solo los roles seleccionados */}
+        {selectedRoles.map((roleKey) => {
           const top = getTopContributorsByRole(contributors, roleKey, 3) || [];
           return (
             <div
@@ -91,9 +91,8 @@ export default function TopContributorsByRole({ contributors }) {
               className="flex flex-row items-center gap-6 w-full"
             >
               <div className="flex items-center min-w-[120px]">
-                {ROLE_ICONS[roleKey]}
                 <span className="text-lg font-bold text-givizBlue4 uppercase tracking-wide drop-shadow">
-                  {label}
+                  {getRoleLabel(roleKey)}
                 </span>
               </div>
               <div className="flex flex-row gap-4 w-full justify-center">
