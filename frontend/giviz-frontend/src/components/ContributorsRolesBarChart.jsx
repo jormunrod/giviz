@@ -15,6 +15,7 @@ const API_BASE =
 
 export default function ContributorsRolesBarChart({ owner, repo }) {
   const [roleCounts, setRoleCounts] = useState([]);
+  const [contributorsList, setContributorsList] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -31,8 +32,10 @@ export default function ContributorsRolesBarChart({ owner, repo }) {
         );
         const data = await res.json();
         const contributors = data.contributors || {};
+        // contributors: { username: { category: { ... } } }
         const roleMap = {};
-        Object.values(contributors).forEach((categories) => {
+        const contributorsArr = [];
+        Object.entries(contributors).forEach(([username, categories]) => {
           let mainRole = null;
           let maxDedication = -1;
           Object.entries(categories).forEach(([role, vals]) => {
@@ -46,6 +49,11 @@ export default function ContributorsRolesBarChart({ owner, repo }) {
           });
           if (mainRole) {
             roleMap[mainRole] = (roleMap[mainRole] || 0) + 1;
+            contributorsArr.push({
+              username,
+              mainRole,
+              dedication: maxDedication,
+            });
           }
         });
         const chartData = Object.entries(roleMap).map(([role, count]) => ({
@@ -53,8 +61,10 @@ export default function ContributorsRolesBarChart({ owner, repo }) {
           count,
         }));
         setRoleCounts(chartData);
+        setContributorsList(contributorsArr);
       } catch {
         setRoleCounts([]);
+        setContributorsList([]);
       }
       setLoading(false);
     }
@@ -68,21 +78,46 @@ export default function ContributorsRolesBarChart({ owner, repo }) {
       ) : roleCounts.length === 0 ? (
         <div>No data available.</div>
       ) : (
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart
-            data={roleCounts}
-            layout="vertical"
-            margin={{ left: 40, right: 40 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis type="number" allowDecimals={false} />
-            <YAxis type="category" dataKey="role" />
-            <Tooltip />
-            <Bar dataKey="count" fill="#8884d8">
-              <LabelList dataKey="count" position="right" />
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+        <>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart
+              data={roleCounts}
+              layout="vertical"
+              margin={{ left: 40, right: 40 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis type="number" allowDecimals={false} />
+              <YAxis type="category" dataKey="role" />
+              <Tooltip />
+              <Bar dataKey="count" fill="#8884d8">
+                <LabelList dataKey="count" position="right" />
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+          <div className="mt-8 w-full">
+            <div className="grid grid-cols-3 gap-2 px-2 mb-2 text-xs font-semibold text-gray-500">
+              <div>Username</div>
+              <div>Main Role</div>
+              <div>Dedication</div>
+            </div>
+            <ul className="divide-y divide-gray-200">
+              {contributorsList.map(({ username, mainRole, dedication }) => (
+                <li
+                  key={username}
+                  className="grid grid-cols-3 gap-2 py-2 text-sm items-center"
+                >
+                  <span className="font-mono font-bold">{username}</span>
+                  <span className="text-givizBlue4 font-semibold">
+                    {mainRole}
+                  </span>
+                  <span className="text-gray-600">
+                    {(dedication * 100).toFixed(1)}%
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </>
       )}
     </div>
   );
