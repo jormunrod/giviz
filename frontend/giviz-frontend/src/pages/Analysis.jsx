@@ -5,6 +5,7 @@ import EffortPieChart from "../components/EffortPieChart";
 import InfoTooltip from "../components/InfoTooltip";
 import Card from "../components/Card";
 import ContributorsList from "../components/ContributorsList";
+import ContributorsRolesBarChart from "../components/ContributorsRolesBarChart";
 
 export default function Analysis() {
   const { repoInfo } = useRepo();
@@ -105,6 +106,20 @@ export default function Analysis() {
         ) : (
           <div className="text-center">No contributors for this repo.</div>
         )}
+      </Card>
+      <Card className="mt-8 w-full max-w-2xl flex flex-col items-center">
+        <div className="flex items-center mb-4">
+          <h2 className="text-xl font-semibold text-center mr-2">
+            Collaborative Roles
+          </h2>
+          <InfoTooltip
+            text={`This chart shows the main collaborative role detected for each contributor, based on their activity and dedication in different categories. Roles are assigned by AI according to the area where each contributor has the highest dedication.`}
+          />
+        </div>
+        <ContributorsRolesBarChart
+          owner={repoInfo?.owner}
+          repo={repoInfo?.repo}
+        />
       </Card>
     </div>
   );
