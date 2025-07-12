@@ -20,11 +20,9 @@ const COLORS = [
 ];
 
 function CustomLegend({ payload }) {
-  const sorted = [...payload].sort(
-    (a, b) => b.payload.value - a.payload.value
-  );
+  const sorted = [...payload].sort((a, b) => b.payload.value - a.payload.value);
   return (
-    <ul className="flex flex-wrap gap-3 justify-center mt-4">
+    <ul className="flex flex-wrap gap-3 justify-center mt-8">
       {sorted.map((entry, i) => (
         <li key={i} className="flex items-center gap-2 text-sm">
           <span
@@ -74,7 +72,9 @@ export default function ContributorRolesPieChart({ owner, repo, username }) {
       setLoading(true);
       try {
         const res = await fetch(
-          `${import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api"}/merge/contributors_effort_by_category/`,
+          `${
+            import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api"
+          }/merge/contributors_effort_by_category/`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -103,7 +103,8 @@ export default function ContributorRolesPieChart({ owner, repo, username }) {
   }, [owner, repo, username]);
 
   const grouped = useMemo(() => groupSmallCategories(roleData), [roleData]);
-  const othersDetails = grouped.find((c) => c.role === "Others")?._details || [];
+  const othersDetails =
+    grouped.find((c) => c.role === "Others")?._details || [];
 
   if (loading) {
     return <div>Loading...</div>;
@@ -118,14 +119,14 @@ export default function ContributorRolesPieChart({ owner, repo, username }) {
 
   return (
     <div className="w-full flex flex-col items-center justify-center transition-all duration-500 pt-8 pb-4">
-      <ResponsiveContainer width="100%" height={showDetails ? 340 : 280}>
-        <PieChart>
+      <ResponsiveContainer width="100%" height={showDetails ? 360 : 300}>
+        <PieChart margin={{ top: 32, bottom: 16 }}>
           <Pie
             data={grouped}
             dataKey="value"
             nameKey="role"
             cx="50%"
-            cy="50%"
+            cy="55%"
             outerRadius={100}
             onMouseEnter={(_, idx) => setActiveIndex(idx)}
             onMouseLeave={() => setActiveIndex(null)}
@@ -133,7 +134,6 @@ export default function ContributorRolesPieChart({ owner, repo, username }) {
             activeShape={(props) => (
               <Sector {...props} outerRadius={110} fill={props.fill} />
             )}
-            label={({ role, value }) => `${role}: ${(value * 100).toFixed(1)}%`}
           >
             {grouped.map((entry, index) => (
               <Cell
@@ -153,7 +153,7 @@ export default function ContributorRolesPieChart({ owner, repo, username }) {
           <Tooltip
             formatter={(value, name) => [`${(value * 100).toFixed(1)}%`, name]}
           />
-          <Legend content={<CustomLegend />} />
+          <Legend content={<CustomLegend />} wrapperStyle={{ marginTop: 32 }} />
         </PieChart>
       </ResponsiveContainer>
       {othersDetails.length > 0 && (
@@ -188,7 +188,8 @@ export default function ContributorRolesPieChart({ owner, repo, username }) {
           <ul className="list-disc ml-5 space-y-1">
             {othersDetails.map((item, i) => (
               <li key={i} className="text-givizBlue4">
-                <span className="font-semibold">{item.role}</span>: {(item.value * 100).toFixed(2)}%
+                <span className="font-semibold">{item.role}</span>:{" "}
+                {(item.value * 100).toFixed(2)}%
               </li>
             ))}
           </ul>
