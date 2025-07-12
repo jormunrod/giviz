@@ -15,6 +15,7 @@ import { useNavigate } from "react-router-dom";
 
 const API_BASE =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
+const PAGE_SIZE = 4;
 
 export default function ContributorsRolesBarChart({
   owner,
@@ -28,7 +29,7 @@ export default function ContributorsRolesBarChart({
   const [currentPage, setCurrentPage] = useState(1);
   const [activeIndex, setActiveIndex] = useState(null);
   const [selectedRole, setSelectedRole] = useState(null);
-  const pageSize = 6;
+  const pageSize = PAGE_SIZE;
   const filteredContributors = selectedRole
     ? contributorsList.filter((c) => c.mainRole === selectedRole)
     : contributorsList;
