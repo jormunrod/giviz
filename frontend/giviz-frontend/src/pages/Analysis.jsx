@@ -5,6 +5,7 @@ import EffortPieChart from "../components/EffortPieChart";
 import InfoTooltip from "../components/InfoTooltip";
 import Card from "../components/Card";
 import ContributorsList from "../components/ContributorsList";
+import ContributorsRolesBarChart from "../components/ContributorsRolesBarChart";
 
 export default function Analysis() {
   const { repoInfo } = useRepo();
@@ -105,6 +106,17 @@ export default function Analysis() {
         ) : (
           <div className="text-center">No contributors for this repo.</div>
         )}
+      </Card>
+      <Card className="mt-8 w-full max-w-2xl flex flex-col items-center">
+        <div className="flex items-center mb-4">
+          <h2 className="text-xl font-semibold text-center mr-2">
+            Contributors by Main Role
+          </h2>
+        </div>
+        <ContributorsRolesBarChart
+          owner={repoInfo?.owner}
+          repo={repoInfo?.repo}
+        />
       </Card>
     </div>
   );
