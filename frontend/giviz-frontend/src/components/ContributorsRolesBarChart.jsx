@@ -180,8 +180,13 @@ export default function ContributorsRolesBarChart({ owner, repo }) {
                           : { cursor: "pointer" }
                       }
                       onClick={() => {
-                        setSelectedRole(entry.role);
-                        setCurrentPage(1);
+                        if (isSelected) {
+                          setSelectedRole(null);
+                          setCurrentPage(1);
+                        } else {
+                          setSelectedRole(entry.role);
+                          setCurrentPage(1);
+                        }
                       }}
                     />
                   );
