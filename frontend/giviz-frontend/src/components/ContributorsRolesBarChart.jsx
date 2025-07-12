@@ -95,6 +95,20 @@ export default function ContributorsRolesBarChart({ owner, repo }) {
     "#00B8D9",
   ];
 
+  const getRoleColorMap = (roles) => {
+    const colorMap = {};
+    roles.forEach((role, idx) => {
+      if (idx < COLORS.length) {
+        colorMap[role] = COLORS[idx];
+      } else {
+        const hue = (idx * 47) % 360;
+        colorMap[role] = `hsl(${hue}, 70%, 60%)`;
+      }
+    });
+    return colorMap;
+  };
+  const roleColorMap = getRoleColorMap(roleCounts.map((r) => r.role));
+
   const getGlobalIndex = (role) => roleCounts.findIndex((r) => r.role === role);
 
   return (
@@ -160,7 +174,7 @@ export default function ContributorsRolesBarChart({ owner, repo }) {
                   return (
                     <Cell
                       key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
+                      fill={roleColorMap[entry.role]}
                       style={
                         isSelected
                           ? {
@@ -263,11 +277,8 @@ export default function ContributorsRolesBarChart({ owner, repo }) {
                       {username}
                     </span>
                     <span
-                      className={`text-givizBlue4 font-semibold cursor-pointer transition underline-offset-2 text-center ${
-                        selectedRole === mainRole
-                          ? "underline"
-                          : "hover:underline"
-                      }`}
+                      className={`font-semibold cursor-pointer transition underline-offset-2 text-center flex items-center justify-center gap-2`}
+                      style={{ color: roleColorMap[mainRole] }}
                       onClick={() => {
                         if (selectedRole === mainRole) {
                           setSelectedRole(null);
@@ -279,7 +290,18 @@ export default function ContributorsRolesBarChart({ owner, repo }) {
                       }}
                       title="Filter by this role"
                     >
-                      {mainRole}
+                      <span>{mainRole}</span>
+                      <span
+                        style={{
+                          display: "inline-block",
+                          width: 12,
+                          height: 12,
+                          borderRadius: "50%",
+                          background: roleColorMap[mainRole],
+                          border: "1px solid #e5e7eb",
+                        }}
+                        title={`Color for ${mainRole}`}
+                      />
                     </span>
                     <span className="text-gray-600 text-center">
                       {(dedication * 100).toFixed(1)}%
