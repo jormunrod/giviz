@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
+import GivizButton from "../components/GivizButton";
 
 function getAllRoles(contributorsData) {
   const rolesSet = new Set();
@@ -35,6 +36,7 @@ export default function TopContributorsByRole({ contributors }) {
   const [hovered, setHovered] = useState({ username: null, roleKey: null });
   const allRoles = useMemo(() => getAllRoles(contributors), [contributors]);
   const [selectedRoles, setSelectedRoles] = useState(() => allRoles);
+  const [showChecklist, setShowChecklist] = useState(false);
 
   const handleRoleToggle = (roleKey) => {
     setSelectedRoles((prev) =>
@@ -46,24 +48,33 @@ export default function TopContributorsByRole({ contributors }) {
 
   return (
     <div className="w-full flex flex-col items-center py-6">
-      <div className="mb-6 w-full max-w-lg flex flex-wrap gap-3 justify-center">
-        {allRoles.map((roleKey) => (
-          <label
-            key={roleKey}
-            className="flex items-center gap-2 bg-gray-100 rounded px-2 py-1 cursor-pointer"
-          >
-            <input
-              type="checkbox"
-              checked={selectedRoles.includes(roleKey)}
-              onChange={() => handleRoleToggle(roleKey)}
-              className="accent-givizBlue4"
-            />
-            <span className="text-sm font-medium text-gray-700">
-              {getRoleLabel(roleKey)}
-            </span>
-          </label>
-        ))}
-      </div>
+      <GivizButton
+        className="mb-4"
+        onClick={() => setShowChecklist((v) => !v)}
+        aria-expanded={showChecklist}
+      >
+        {showChecklist ? "Hide filters" : "Show filters"}
+      </GivizButton>
+      {showChecklist && (
+        <div className="mb-6 w-full max-w-lg flex flex-wrap gap-3 justify-center">
+          {allRoles.map((roleKey) => (
+            <label
+              key={roleKey}
+              className="flex items-center gap-2 bg-gray-100 rounded px-2 py-1 cursor-pointer"
+            >
+              <input
+                type="checkbox"
+                checked={selectedRoles.includes(roleKey)}
+                onChange={() => handleRoleToggle(roleKey)}
+                className="accent-givizBlue4"
+              />
+              <span className="text-sm font-medium text-gray-700">
+                {getRoleLabel(roleKey)}
+              </span>
+            </label>
+          ))}
+        </div>
+      )}
       <div className="w-full rounded-2xl p-7 flex flex-col gap-4">
         <div className="flex flex-row items-center gap-4 w-full mb-2">
           <div className="min-w-[100px]" />
