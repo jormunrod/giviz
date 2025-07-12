@@ -110,8 +110,11 @@ export default function Analysis() {
       <Card className="mt-8 w-full max-w-2xl flex flex-col items-center">
         <div className="flex items-center mb-4">
           <h2 className="text-xl font-semibold text-center mr-2">
-            Contributors by Main Role
+            Collaborative Roles
           </h2>
+          <InfoTooltip
+            text={`This chart shows the main collaborative role detected for each contributor, based on their activity and dedication in different categories. Roles are assigned by AI according to the area where each contributor has the highest dedication.`}
+          />
         </div>
         <ContributorsRolesBarChart
           owner={repoInfo?.owner}
