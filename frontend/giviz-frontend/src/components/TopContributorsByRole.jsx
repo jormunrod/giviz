@@ -35,7 +35,19 @@ function getTopContributorsByRole(contributorsData, roleKey, topN = 3) {
 export default function TopContributorsByRole({ contributors }) {
   const [hovered, setHovered] = useState({ username: null, roleKey: null });
   const allRoles = useMemo(() => getAllRoles(contributors), [contributors]);
-  const [selectedRoles, setSelectedRoles] = useState(() => allRoles);
+  const topRoles = useMemo(() => {
+    const counts = {};
+    allRoles.forEach((roleKey) => {
+      counts[roleKey] = Object.values(contributors || {}).filter(
+        (roles) => !!roles[roleKey]
+      ).length;
+    });
+    return allRoles
+      .slice()
+      .sort((a, b) => counts[b] - counts[a])
+      .slice(0, 3);
+  }, [allRoles, contributors]);
+  const [selectedRoles, setSelectedRoles] = useState(() => topRoles);
   const [showChecklist, setShowChecklist] = useState(false);
 
   const handleRoleToggle = (roleKey) => {
