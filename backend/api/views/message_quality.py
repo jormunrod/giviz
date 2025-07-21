@@ -49,7 +49,8 @@ def analyze_message_quality(request):
                     {
                         "id": i.get("number"),
                         "type": "issue",
-                        "text": i.get("title", "") + "\n" + i.get("body", ""),
+                        "title": i.get("title"),
+                        "body": i.get("body", ""),
                         "score": None,
                         "suggestions": [],
                     }
@@ -61,7 +62,8 @@ def analyze_message_quality(request):
                     {
                         "id": p.get("number"),
                         "type": "pr",
-                        "text": p.get("title", "") + "\n" + p.get("body", ""),
+                        "title": p.get("title"),
+                        "body": p.get("body", ""),
                         "score": None,
                         "suggestions": [],
                     }
