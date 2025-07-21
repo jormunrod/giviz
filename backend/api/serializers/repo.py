@@ -89,3 +89,9 @@ class MessageQualityQuerySerializer(serializers.Serializer):
         default="commit",
         help_text="Type of message to analyze: commit, issue, pr, or all.",
     )
+    max_messages = serializers.IntegerField(
+        required=False,
+        min_value=0,
+        default=0,
+        help_text="Maximum number of messages to analyze (0 means all).",
+    )

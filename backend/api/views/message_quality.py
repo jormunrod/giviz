@@ -4,6 +4,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from api.utils.common.save import load_repo_data
 from api.utils.ai.message_quality import analyze_all_message_quality
+from api.utils.common.save import save_repo_data
 
 
 from api.serializers.repo import MessageQualityQuerySerializer
@@ -23,6 +24,7 @@ def analyze_message_quality(request):
     owner = serializer.validated_data["owner"]
     repo = serializer.validated_data["repo"]
     msg_type = serializer.validated_data["type"]
+    max_messages = serializer.validated_data.get("max_messages", 0)
 
     messages = []
     types_to_check = ["commit", "issue", "pr"] if msg_type == "all" else [msg_type]
@@ -49,5 +51,15 @@ def analyze_message_quality(request):
                 text = (p.get("title", "") + "\n" + p.get("body", "")).strip()
                 messages.append({"id": p.get("number"), "type": "pr", "text": text})
 
+    if max_messages > 0:
+        messages = messages[:max_messages]
+
     results = analyze_all_message_quality(messages)
+
+    if msg_type == "all":
+        filename = "message_quality.json"
+    else:
+        filename = f"message_quality_{msg_type}.json"
+    save_repo_data(owner, repo, results, filename, subfolder="ai")
+
     return Response({"status": "ok", "results": results})
