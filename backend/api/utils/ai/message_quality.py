@@ -20,7 +20,7 @@ PROMPT_TEMPLATE = """
         - Spelling and grammar
         - Whether it provides enough context
 
-        If the score is less than 6, give specific suggestions to improve the message (Always in English).
+        If the score is less than 8, give specific suggestions to improve the message (Always in English).
 
         **Output format:**
         Return a JSON array where each object includes:

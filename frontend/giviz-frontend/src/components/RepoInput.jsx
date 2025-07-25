@@ -7,13 +7,32 @@ import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "./LoadingSpinner";
 
 export default function RepoInput() {
+  const fetchMessageQuality = async ({ owner, repo }) => {
+    try {
+      const res = await fetch(`${API_BASE}/analysis/analyze_message_quality/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          owner,
+          repo,
+          type: "all",
+          max_messages: Math.max(maxCommits, maxIssues, maxPulls),
+        }),
+      });
+      const data = await res.json();
+      return data;
+    } catch (err) {
+      alert("Error fetching message quality data");
+      console.error("Error fetching message quality data:", err);
+      return null;
+    }
+  };
   const [inputUrl, setInputUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState("");
   const { setRepoInfo } = useRepo();
   const navigate = useNavigate();
 
-  // New state for limits
   const [maxCommits, setMaxCommits] = useState(30);
   const [maxIssues, setMaxIssues] = useState(30);
   const [maxPulls, setMaxPulls] = useState(30);
@@ -63,7 +82,6 @@ export default function RepoInput() {
 
   const fetchAnalysis = async ({ owner, repo, depth = 0 }) => {
     try {
-      // Call the endpoint that returns the complete classified data
       const res = await fetch(
         `${API_BASE}/analysis/classify_contributions_percentages/`,
         {
@@ -73,10 +91,8 @@ export default function RepoInput() {
         }
       );
       const data = await res.json();
-      // If the backend only returns percentages, another request is needed to get the classified contributions
       let classified = null;
       if (data && data.status === "ok" && Array.isArray(data.percentages)) {
-        // Try to get the classified contributions if they are not present in the response
         if (data.classified) {
           classified = data.classified;
         } else {
@@ -121,13 +137,15 @@ export default function RepoInput() {
       if (extractResult && extractResult.status === "ok") {
         setStep("Analyzing contributions with AI...");
         const analysis = await fetchAnalysis({ ...result, depth: 0 });
-        if (analysis) {
-          setRepoInfo({ ...result, analysis });
+        setStep("Analyzing message quality...");
+        const messageQuality = await fetchMessageQuality(result);
+        if (analysis && messageQuality) {
+          setRepoInfo({ ...result, analysis, messageQuality });
           navigate("/analysis");
         } else {
           setLoading(false);
           setStep("");
-          alert("Failed to classify contributions.");
+          alert("Failed to classify contributions or fetch message quality.");
         }
       } else {
         setLoading(false);
@@ -149,13 +167,15 @@ export default function RepoInput() {
       if (extractResult && extractResult.status === "ok") {
         setStep("Analyzing contributions with AI...");
         const analysis = await fetchAnalysis({ ...result, depth: 0 });
-        if (analysis) {
-          setRepoInfo({ ...result, analysis });
+        setStep("Analyzing message quality...");
+        const messageQuality = await fetchMessageQuality(result);
+        if (analysis && messageQuality) {
+          setRepoInfo({ ...result, analysis, messageQuality });
           navigate("/analysis");
         } else {
           setLoading(false);
           setStep("");
-          alert("Failed to classify contributions.");
+          alert("Failed to classify contributions or fetch message quality.");
         }
       } else {
         setLoading(false);
