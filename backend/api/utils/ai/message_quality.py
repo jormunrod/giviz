@@ -20,7 +20,7 @@ PROMPT_TEMPLATE = """
         - Spelling and grammar
         - Whether it provides enough context
 
-        If the score is less than 7, give specific suggestions to improve the message.
+        If the score is less than 6, give specific suggestions to improve the message (Always in English).
 
         **Output format:**
         Return a JSON array where each object includes:
@@ -107,10 +107,18 @@ def analyze_message_quality_with_ai(
     content = response.choices[0].message.content
     try:
         return json.loads(content)
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as e:
         start = content.find("[")
         end = content.rfind("]") + 1
-        return json.loads(content[start:end])
+        json_str = content[start:end] if start != -1 and end != -1 else content
+        try:
+            return json.loads(json_str)
+        except Exception as e2:
+            # Log and raise a clear error
+            print("OpenAI response (truncated):", content[:1000])
+            raise ValueError(
+                f"OpenAI response is not valid JSON. Error: {e2}. Content starts: {content[:200]}"
+            )
 
 
 def analyze_all_message_quality(
