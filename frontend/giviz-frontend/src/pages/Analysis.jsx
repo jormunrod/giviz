@@ -7,6 +7,7 @@ import InfoTooltip from "../components/InfoTooltip";
 import Card from "../components/Card";
 import ContributorsList from "../components/ContributorsList";
 import ContributorsRolesBarChart from "../components/ContributorsRolesBarChart";
+import MessageQualityBarChart from "../components/MessageQualityBarChart";
 
 export default function Analysis() {
   const { repoInfo } = useRepo();
@@ -148,6 +149,16 @@ export default function Analysis() {
           owner={repoInfo?.owner}
           repo={repoInfo?.repo}
         />
+      </Card>
+
+      <Card className="mt-8 w-full max-w-2xl flex flex-col items-center">
+        <div className="flex items-center mb-4">
+          <h2 className="text-xl font-semibold text-center mr-2">
+            Message Quality by Category
+          </h2>
+          <InfoTooltip text="ToDo" />
+        </div>
+        <MessageQualityBarChart messageQuality={repoInfo?.messageQuality} />
       </Card>
       <Card className="mt-8 w-full max-w-2xl flex flex-col items-center">
         <div className="flex items-center mb-4">
