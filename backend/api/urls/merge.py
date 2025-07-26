@@ -3,7 +3,7 @@ from api.views.merge import (
     merge_contributions_view,
     contributors_by_category_view,
     contributors_effort_by_category_view,
-    # contributors_message_quality_view,
+    contributors_message_quality_view,
 )
 
 
@@ -21,7 +21,7 @@ urlpatterns = [
     ),
     path(
         "contributors_message_quality/",
-        contributors_by_category_view,  # Reusing the same view for now
+        contributors_message_quality_view,
         name="contributors_message_quality",
     ),
 ]

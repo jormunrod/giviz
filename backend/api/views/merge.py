@@ -182,3 +182,23 @@ def contributors_effort_by_category_view(request):
                 (vals["commits"] + vals["issues"] + vals["pulls"]) / total, 4
             )
     return Response({"status": "ok", "contributors": result})
+
+
+@swagger_auto_schema(method="post", request_body=RepoQuerySerializer)
+@api_view(["POST"])
+def contributors_message_quality_view(request):
+    serializer = RepoQuerySerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(
+            {"error": "Missing or invalid parameters", "detail": serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    owner = serializer.validated_data["owner"]
+    repo = serializer.validated_data["repo"]
+    try:
+        data = load_repo_data(owner, repo, "message_quality.json", subfolder="ai")
+        if not data:
+            return Response({"error": "No message quality data found."}, status=404)
+        return Response({"status": "ok", "data": data})
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
