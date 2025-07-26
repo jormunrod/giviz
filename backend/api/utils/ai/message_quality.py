@@ -107,17 +107,16 @@ def analyze_message_quality_with_ai(
     content = response.choices[0].message.content
     try:
         return json.loads(content)
-    except json.JSONDecodeError as e:
+    except json.JSONDecodeError:
         start = content.find("[")
         end = content.rfind("]") + 1
         json_str = content[start:end] if start != -1 and end != -1 else content
         try:
             return json.loads(json_str)
-        except Exception as e2:
-            # Log and raise a clear error
+        except Exception as e:
             print("OpenAI response (truncated):", content[:1000])
             raise ValueError(
-                f"OpenAI response is not valid JSON. Error: {e2}. Content starts: {content[:200]}"
+                f"OpenAI response is not valid JSON. Error: {e}. Content starts: {content[:200]}"
             )
 
 
