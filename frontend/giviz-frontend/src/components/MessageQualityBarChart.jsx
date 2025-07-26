@@ -18,9 +18,9 @@ const CATEGORY_LABELS = {
 };
 
 const QUALITY_BANDS = [
-  { label: "Low", min: 0, max: 5, color: "#FF6699" },
-  { label: "Medium", min: 6, max: 8, color: "#FFBB28" },
   { label: "High", min: 9, max: 10, color: "#00C49F" },
+  { label: "Medium", min: 6, max: 8, color: "#FFBB28" },
+  { label: "Low", min: 0, max: 5, color: "#FF6699" },
 ];
 
 export default function MessageQualityBarChart({ messageQuality }) {
@@ -63,19 +63,20 @@ export default function MessageQualityBarChart({ messageQuality }) {
           </GivizButton>
         ))}
       </div>
-      <ResponsiveContainer width="100%" height={220}>
+      <ResponsiveContainer width="100%" height={180}>
         <BarChart
           data={bandCounts}
+          layout="vertical"
           margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
         >
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="label" />
-          <YAxis allowDecimals={false} />
+          <XAxis type="number" allowDecimals={false} />
+          <YAxis type="category" dataKey="label" />
           <Tooltip
             formatter={(value, name) => [`${value} contributions`, name]}
             labelFormatter={(label) => `${label} quality`}
           />
-          <Bar dataKey="count">
+          <Bar dataKey="count" orientation="left">
             {bandCounts.map((entry) => (
               <Cell key={entry.label} fill={entry.color} />
             ))}
