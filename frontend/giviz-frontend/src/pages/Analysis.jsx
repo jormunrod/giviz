@@ -195,6 +195,7 @@ export default function Analysis() {
           <MessageQualityBarChart messageQuality={messageQuality} />
         )}
       </Card>
+
       <Card className="mt-8 w-full max-w-2xl flex flex-col items-center">
         <div className="flex items-center mb-4">
           <h2 className="text-xl font-semibold text-center mr-2">
