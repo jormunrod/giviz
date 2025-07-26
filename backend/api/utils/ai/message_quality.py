@@ -1,3 +1,4 @@
+import re
 import os
 from math import ceil
 from openai import OpenAI
@@ -111,13 +112,18 @@ def analyze_message_quality_with_ai(
         start = content.find("[")
         end = content.rfind("]") + 1
         json_str = content[start:end] if start != -1 and end != -1 else content
+
+        json_str = re.sub(r",\s*([\]\}])", r"\1", json_str)
+        if not json_str.startswith("["):
+            json_str = "[" + json_str
+        if not json_str.endswith("]"):
+            json_str = json_str + "]"
         try:
             return json.loads(json_str)
         except Exception as e:
             print("OpenAI response (truncated):", content[:1000])
-            raise ValueError(
-                f"OpenAI response is not valid JSON. Error: {e}. Content starts: {content[:200]}"
-            )
+            print("Sanitized JSON string (truncated):", json_str[:1000])
+            return []
 
 
 def analyze_all_message_quality(
