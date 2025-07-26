@@ -22,6 +22,15 @@ export default function Analysis() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    let active = true;
+    setContributors([]);
+    setRoleContributors(null);
+    setMessageQuality([]);
+    setErrorQuality(null);
+    setLoadingContrib(false);
+    setLoadingRoleContrib(false);
+    setLoadingQuality(false);
+
     async function fetchContributors() {
       if (!repoInfo?.owner || !repoInfo?.repo) return;
       setLoadingContrib(true);
@@ -31,13 +40,17 @@ export default function Analysis() {
         const url = `${API_BASE}/contributors/?owner=${repoInfo.owner}&repo=${repoInfo.repo}`;
         const res = await fetch(url);
         const data = await res.json();
-        if (data && Array.isArray(data.contributors)) {
-          setContributors(data.contributors);
+        if (active) {
+          if (data && Array.isArray(data.contributors)) {
+            setContributors(data.contributors);
+          } else {
+            setContributors([]);
+          }
         }
       } catch {
-        setContributors([]);
+        if (active) setContributors([]);
       } finally {
-        setLoadingContrib(false);
+        if (active) setLoadingContrib(false);
       }
     }
     async function fetchRoleContributors() {
@@ -53,15 +66,17 @@ export default function Analysis() {
           body: JSON.stringify({ owner: repoInfo.owner, repo: repoInfo.repo }),
         });
         const data = await res.json();
-        if (data && data.contributors) {
-          setRoleContributors(data.contributors);
-        } else {
-          setRoleContributors(null);
+        if (active) {
+          if (data && data.contributors) {
+            setRoleContributors(data.contributors);
+          } else {
+            setRoleContributors(null);
+          }
         }
       } catch {
-        setRoleContributors(null);
+        if (active) setRoleContributors(null);
       } finally {
-        setLoadingRoleContrib(false);
+        if (active) setLoadingRoleContrib(false);
       }
     }
     async function fetchMessageQuality() {
@@ -78,20 +93,27 @@ export default function Analysis() {
           body: JSON.stringify({ owner: repoInfo.owner, repo: repoInfo.repo }),
         });
         const data = await res.json();
-        if (data.status === "ok" && Array.isArray(data.data)) {
-          setMessageQuality(data.data);
-        } else {
-          setErrorQuality("Unexpected response format");
+        if (active) {
+          if (data.status === "ok" && Array.isArray(data.data)) {
+            setMessageQuality(data.data);
+          } else {
+            setErrorQuality("Unexpected response format");
+          }
         }
       } catch {
-        setErrorQuality("Failed to fetch data");
-        setMessageQuality([]);
+        if (active) {
+          setErrorQuality("Failed to fetch data");
+          setMessageQuality([]);
+        }
       }
-      setLoadingQuality(false);
+      if (active) setLoadingQuality(false);
     }
     fetchContributors();
     fetchRoleContributors();
     fetchMessageQuality();
+    return () => {
+      active = false;
+    };
   }, [repoInfo]);
 
   function handleSelectContributor(username) {
