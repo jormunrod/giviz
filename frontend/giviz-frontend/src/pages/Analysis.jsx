@@ -192,7 +192,11 @@ export default function Analysis() {
         ) : errorQuality ? (
           <div className="text-red-500">{errorQuality}</div>
         ) : (
-          <MessageQualityBarChart messageQuality={messageQuality} />
+          <MessageQualityBarChart
+            messageQuality={messageQuality}
+            owner={repoInfo?.owner}
+            repo={repoInfo?.repo}
+          />
         )}
       </Card>
 

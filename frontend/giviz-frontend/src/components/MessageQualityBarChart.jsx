@@ -23,7 +23,11 @@ const QUALITY_BANDS = [
   { label: "Low", min: 0, max: 5, color: "#FF6699" },
 ];
 
-export default function MessageQualityBarChart({ messageQuality }) {
+export default function MessageQualityBarChart({
+  messageQuality,
+  owner,
+  repo,
+}) {
   const [selectedType, setSelectedType] = useState("commit");
   const [suggestionsPage, setSuggestionsPage] = useState(0);
   const SUGGESTIONS_PER_PAGE = 3;
@@ -116,7 +120,15 @@ export default function MessageQualityBarChart({ messageQuality }) {
                   <div className="text-xs text-gray-700 font-bold mb-1">
                     <span className="mr-2">Problem:</span>
                     <a
-                      href={`https://github.com/search?q=${msg.id}`}
+                      href={
+                        msg.type === "commit"
+                          ? `https://github.com/${owner}/${repo}/commit/${msg.id}`
+                          : msg.type === "issue"
+                          ? `https://github.com/${owner}/${repo}/issues/${msg.id}`
+                          : msg.type === "pr"
+                          ? `https://github.com/${owner}/${repo}/pull/${msg.id}`
+                          : `https://github.com/search?q=${msg.id}`
+                      }
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-givizBlue4 underline"
