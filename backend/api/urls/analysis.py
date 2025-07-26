@@ -2,8 +2,8 @@ from django.urls import path
 from api.views.analysis import (
     classify_contributions,
     classify_contributions_percentages,
+    analyze_message_quality,
 )
-from api.views.message_quality import analyze_message_quality
 
 urlpatterns = [
     path(
