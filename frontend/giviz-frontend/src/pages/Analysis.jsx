@@ -16,6 +16,9 @@ export default function Analysis() {
   const [loadingContrib, setLoadingContrib] = useState(false);
   const [roleContributors, setRoleContributors] = useState(null);
   const [loadingRoleContrib, setLoadingRoleContrib] = useState(false);
+  const [messageQuality, setMessageQuality] = useState([]);
+  const [loadingQuality, setLoadingQuality] = useState(false);
+  const [errorQuality, setErrorQuality] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -61,8 +64,34 @@ export default function Analysis() {
         setLoadingRoleContrib(false);
       }
     }
+    async function fetchMessageQuality() {
+      if (!repoInfo?.owner || !repoInfo?.repo) return;
+      setLoadingQuality(true);
+      setErrorQuality(null);
+      try {
+        const API_BASE =
+          import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
+        const url = `${API_BASE}/merge/contributors_message_quality/`;
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ owner: repoInfo.owner, repo: repoInfo.repo }),
+        });
+        const data = await res.json();
+        if (data.status === "ok" && Array.isArray(data.data)) {
+          setMessageQuality(data.data);
+        } else {
+          setErrorQuality("Unexpected response format");
+        }
+      } catch {
+        setErrorQuality("Failed to fetch data");
+        setMessageQuality([]);
+      }
+      setLoadingQuality(false);
+    }
     fetchContributors();
     fetchRoleContributors();
+    fetchMessageQuality();
   }, [repoInfo]);
 
   function handleSelectContributor(username) {
@@ -156,9 +185,15 @@ export default function Analysis() {
           <h2 className="text-xl font-semibold text-center mr-2">
             Message Quality by Category
           </h2>
-          <InfoTooltip text="ToDo" />
+          <InfoTooltip text="Shows the distribution of message quality for each category (commit, issue, PR)." />
         </div>
-        <MessageQualityBarChart messageQuality={repoInfo?.messageQuality} />
+        {loadingQuality ? (
+          <div>Loading message quality...</div>
+        ) : errorQuality ? (
+          <div className="text-red-500">{errorQuality}</div>
+        ) : (
+          <MessageQualityBarChart messageQuality={messageQuality} />
+        )}
       </Card>
       <Card className="mt-8 w-full max-w-2xl flex flex-col items-center">
         <div className="flex items-center mb-4">
