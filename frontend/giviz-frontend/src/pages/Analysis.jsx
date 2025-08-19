@@ -7,6 +7,7 @@ import InfoTooltip from "../components/InfoTooltip";
 import Card from "../components/Card";
 import ContributorsList from "../components/ContributorsList";
 import ContributorsRolesBarChart from "../components/ContributorsRolesBarChart";
+import MessageQualityBarChart from "../components/MessageQualityBarChart";
 
 export default function Analysis() {
   const { repoInfo } = useRepo();
@@ -15,9 +16,21 @@ export default function Analysis() {
   const [loadingContrib, setLoadingContrib] = useState(false);
   const [roleContributors, setRoleContributors] = useState(null);
   const [loadingRoleContrib, setLoadingRoleContrib] = useState(false);
+  const [messageQuality, setMessageQuality] = useState([]);
+  const [loadingQuality, setLoadingQuality] = useState(false);
+  const [errorQuality, setErrorQuality] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
+    let active = true;
+    setContributors([]);
+    setRoleContributors(null);
+    setMessageQuality([]);
+    setErrorQuality(null);
+    setLoadingContrib(false);
+    setLoadingRoleContrib(false);
+    setLoadingQuality(false);
+
     async function fetchContributors() {
       if (!repoInfo?.owner || !repoInfo?.repo) return;
       setLoadingContrib(true);
@@ -27,13 +40,17 @@ export default function Analysis() {
         const url = `${API_BASE}/contributors/?owner=${repoInfo.owner}&repo=${repoInfo.repo}`;
         const res = await fetch(url);
         const data = await res.json();
-        if (data && Array.isArray(data.contributors)) {
-          setContributors(data.contributors);
+        if (active) {
+          if (data && Array.isArray(data.contributors)) {
+            setContributors(data.contributors);
+          } else {
+            setContributors([]);
+          }
         }
       } catch {
-        setContributors([]);
+        if (active) setContributors([]);
       } finally {
-        setLoadingContrib(false);
+        if (active) setLoadingContrib(false);
       }
     }
     async function fetchRoleContributors() {
@@ -49,19 +66,54 @@ export default function Analysis() {
           body: JSON.stringify({ owner: repoInfo.owner, repo: repoInfo.repo }),
         });
         const data = await res.json();
-        if (data && data.contributors) {
-          setRoleContributors(data.contributors);
-        } else {
-          setRoleContributors(null);
+        if (active) {
+          if (data && data.contributors) {
+            setRoleContributors(data.contributors);
+          } else {
+            setRoleContributors(null);
+          }
         }
       } catch {
-        setRoleContributors(null);
+        if (active) setRoleContributors(null);
       } finally {
-        setLoadingRoleContrib(false);
+        if (active) setLoadingRoleContrib(false);
       }
+    }
+    async function fetchMessageQuality() {
+      if (!repoInfo?.owner || !repoInfo?.repo) return;
+      setLoadingQuality(true);
+      setErrorQuality(null);
+      try {
+        const API_BASE =
+          import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
+        const url = `${API_BASE}/merge/contributors_message_quality/`;
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ owner: repoInfo.owner, repo: repoInfo.repo }),
+        });
+        const data = await res.json();
+        if (active) {
+          if (data.status === "ok" && Array.isArray(data.data)) {
+            setMessageQuality(data.data);
+          } else {
+            setErrorQuality("Unexpected response format");
+          }
+        }
+      } catch {
+        if (active) {
+          setErrorQuality("Failed to fetch data");
+          setMessageQuality([]);
+        }
+      }
+      if (active) setLoadingQuality(false);
     }
     fetchContributors();
     fetchRoleContributors();
+    fetchMessageQuality();
+    return () => {
+      active = false;
+    };
   }, [repoInfo]);
 
   function handleSelectContributor(username) {
@@ -149,6 +201,27 @@ export default function Analysis() {
           repo={repoInfo?.repo}
         />
       </Card>
+
+      <Card className="mt-8 w-full max-w-2xl flex flex-col items-center">
+        <div className="flex items-center mb-4">
+          <h2 className="text-xl font-semibold text-center mr-2">
+            Message Quality by Category
+          </h2>
+          <InfoTooltip text="Visualize how message quality is distributed across each category (commit, issue, PR). Quality is assessed based on clarity, usefulness, and best practices. For messages that can be improved, you will also see specific suggestions to help you write clearer and more effective contributions." />
+        </div>
+        {loadingQuality ? (
+          <div>Loading message quality...</div>
+        ) : errorQuality ? (
+          <div className="text-red-500">{errorQuality}</div>
+        ) : (
+          <MessageQualityBarChart
+            messageQuality={messageQuality}
+            owner={repoInfo?.owner}
+            repo={repoInfo?.repo}
+          />
+        )}
+      </Card>
+
       <Card className="mt-8 w-full max-w-2xl flex flex-col items-center">
         <div className="flex items-center mb-4">
           <h2 className="text-xl font-semibold text-center mr-2">

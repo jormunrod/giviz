@@ -40,6 +40,28 @@ def merge_contributions(
     if classified is None:
         raise FileNotFoundError(f"No classified file found for {owner}/{repo}")
     index = build_classified_index(classified)
+    quality_files = {
+        "commits": "message_quality_commit.json",
+        "issues": "message_quality_issue.json",
+        "pulls": "message_quality_pr.json",
+    }
+    quality_data = {}
+    global_quality = load_repo_data(owner, repo, "message_quality.json", subfolder="ai")
+    for qtype, qfile in quality_files.items():
+        q = load_repo_data(owner, repo, qfile, subfolder="ai")
+        if q:
+            quality_data[qtype] = {str(entry["id"]): entry for entry in q}
+        elif global_quality:
+            filtered = [
+                entry
+                for entry in global_quality
+                if entry.get("type") == qtype[:-1]
+                or (qtype == "pulls" and entry.get("type") == "pr")
+            ]
+            quality_data[qtype] = {str(entry["id"]): entry for entry in filtered}
+        else:
+            quality_data[qtype] = {}
+
     for name, (filename, id_field, t) in FILES.items():
         items = load_repo_data(owner, repo, filename)
         if items is None:
@@ -54,6 +76,15 @@ def merge_contributions(
                 if classified_entry and "category" in classified_entry
                 else None
             )
+            # Add quality info if available
+            qtype = name
+            qinfo = quality_data.get(qtype, {}).get(str(key))
+            if qinfo:
+                item["score"] = qinfo.get("score")
+                item["suggestions"] = qinfo.get("suggestions")
+            else:
+                item["score"] = None
+                item["suggestions"] = None
             new_items.append(item)
         save_repo_data(
             owner, repo, new_items, f"{name}_typed.json", subfolder=output_subfolder

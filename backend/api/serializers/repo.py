@@ -77,3 +77,21 @@ class RepoQueryWithMaxPullsSerializer(RepoQuerySerializer):
         default=50,
         help_text="Maximum number of pull requests to extract (optional).",
     )
+
+
+class MessageQualityQuerySerializer(serializers.Serializer):
+    """Serializer for message quality analysis endpoint."""
+
+    owner = serializers.CharField(help_text="Repository owner (user or organization)")
+    repo = serializers.CharField(help_text="Repository name")
+    type = serializers.ChoiceField(
+        choices=["commit", "issue", "pr", "all"],
+        default="commit",
+        help_text="Type of message to analyze: commit, issue, pr, or all.",
+    )
+    max_messages = serializers.IntegerField(
+        required=False,
+        min_value=0,
+        default=0,
+        help_text="Maximum number of messages to analyze (0 means all).",
+    )
