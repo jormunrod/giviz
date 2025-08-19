@@ -3,7 +3,8 @@
 echo "What do you want to run?"
 echo "1) Backend (Django)"
 echo "2) Frontend (Vite + React)"
-read -p "Choose (1/2): " choice
+echo "3) Check flake8 issues (Python code style)"
+read -p "Choose (1/2/3): " choice
 
 if [ "$choice" == "1" ]; then
   echo "Starting backend..."
@@ -38,7 +39,13 @@ elif [ "$choice" == "2" ]; then
 
   npm run dev
 
+elif [ "$choice" == "3" ]; then
+  echo "Checking flake8 issues..."
+  cd backend || exit
+  source venv/bin/activate
+  flake8 api
+
 else
-  echo "Invalid choice. Pick 1 or 2, hotshot."
+  echo "Invalid choice. Pick 1, 2, or 3, hotshot."
   exit 1
 fi
