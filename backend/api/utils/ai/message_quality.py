@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-BATCH_SIZE = 60  # Number of messages to analyze in each batch
+BATCH_SIZE = os.getenv("AI_BATCH_SIZE", 20)
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
