@@ -123,6 +123,7 @@ def analyze_message_quality_with_ai(
         except Exception as e:
             print("OpenAI response (truncated):", content[:1000])
             print("Sanitized JSON string (truncated):", json_str[:1000])
+            print("Error parsing JSON:", e)
             return []
 
 
