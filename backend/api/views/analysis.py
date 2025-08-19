@@ -140,7 +140,10 @@ def analyze_message_quality(request):
     owner = serializer.validated_data["owner"]
     repo = serializer.validated_data["repo"]
     msg_type = serializer.validated_data["type"]
-    max_messages = serializer.validated_data.get("max_messages", 0)
+
+    max_commits = request.data.get("max_commits")
+    max_issues = request.data.get("max_issues")
+    max_pulls = request.data.get("max_pulls")
 
     messages = []
     types_to_check = ["commit", "issue", "pr"] if msg_type == "all" else [msg_type]
@@ -148,6 +151,8 @@ def analyze_message_quality(request):
     for t in types_to_check:
         if t == "commit":
             commits = load_repo_data(owner, repo, "commits.json") or []
+            if max_commits is not None:
+                commits = commits[: int(max_commits)]
             for c in commits:
                 messages.append(
                     {
@@ -158,17 +163,18 @@ def analyze_message_quality(request):
                 )
         elif t == "issue":
             issues = load_repo_data(owner, repo, "issues.json") or []
+            if max_issues is not None:
+                issues = issues[: int(max_issues)]
             for i in issues:
                 text = (i.get("title", "") + "\n" + i.get("body", "")).strip()
                 messages.append({"id": i.get("number"), "type": "issue", "text": text})
         elif t == "pr":
             prs = load_repo_data(owner, repo, "pulls.json") or []
+            if max_pulls is not None:
+                prs = prs[: int(max_pulls)]
             for p in prs:
                 text = (p.get("title", "") + "\n" + p.get("body", "")).strip()
                 messages.append({"id": p.get("number"), "type": "pr", "text": text})
-
-    if max_messages > 0:
-        messages = messages[:max_messages]
 
     results = analyze_all_message_quality(messages)
 

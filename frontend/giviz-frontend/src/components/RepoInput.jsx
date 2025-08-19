@@ -16,7 +16,9 @@ export default function RepoInput() {
           owner,
           repo,
           type: "all",
-          max_messages: Math.max(maxCommits, maxIssues, maxPulls),
+          max_commits: maxCommits,
+          max_issues: maxIssues,
+          max_pulls: maxPulls,
         }),
       });
       const data = await res.json();
