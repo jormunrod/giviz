@@ -207,7 +207,7 @@ export default function Analysis() {
           <h2 className="text-xl font-semibold text-center mr-2">
             Message Quality by Category
           </h2>
-          <InfoTooltip text="Shows the distribution of message quality for each category (commit, issue, PR)." />
+          <InfoTooltip text="Visualize how message quality is distributed across each category (commit, issue, PR). Quality is assessed based on clarity, usefulness, and best practices. For messages that can be improved, you will also see specific suggestions to help you write clearer and more effective contributions." />
         </div>
         {loadingQuality ? (
           <div>Loading message quality...</div>
