@@ -4,6 +4,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
 from api.serializers.repo import (
+    ContributorActivitySerializer,
     MessageQualityQuerySerializer,
     RepoQueryWithDepthSerializer,
 )
@@ -11,6 +12,9 @@ from api.utils.common.save import load_repo_data, save_repo_data
 from api.utils.common.prepare_data import prepare_commits, prepare_issues, prepare_pulls
 from api.utils.ai.classify_contributions import classify_all_contributions
 from api.utils.ai.message_quality import analyze_all_message_quality
+from api.utils.ai.contributor_activity_summary import (
+    generate_contributor_activity_summary,
+)
 
 
 def classify_and_save_contributions(owner, repo):
@@ -185,3 +189,25 @@ def analyze_message_quality(request):
     save_repo_data(owner, repo, results, filename, subfolder="ai")
 
     return Response({"status": "ok", "results": results})
+
+
+@swagger_auto_schema(method="post", request_body=ContributorActivitySerializer)
+@api_view(["POST"])
+def summarize_contributor_activity(request):
+    """Summarize contributor activity for a specific repository."""
+    serializer = ContributorActivitySerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(
+            {"error": "Missing or invalid parameters", "detail": serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    owner = serializer.validated_data["owner"]
+    repo = serializer.validated_data["repo"]
+    contributor = serializer.validated_data["contributor"]
+
+    summary_text = generate_contributor_activity_summary(owner, repo, contributor)
+
+    return Response(
+        {"status": "ok", "summary": summary_text, "contributor": contributor}
+    )
