@@ -3,7 +3,7 @@ import { useRepo } from "../hooks/useRepo";
 import Card from "../components/Card";
 import { useEffect, useState } from "react";
 import GivizButton from "../components/GivizButton";
-import ContributorRolesPieChart from "../components/ContributorRolesPieChart";
+import ContributorRolesPieChart from "../components/Contributor/ContributorRolesPieChart";
 import ContributorSummary from "../components/Contributor/ContributorSummary";
 
 export default function Contributor() {
