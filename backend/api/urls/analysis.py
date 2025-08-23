@@ -3,6 +3,7 @@ from api.views.analysis import (
     classify_contributions,
     classify_contributions_percentages,
     analyze_message_quality,
+    summarize_contributor_activity,
 )
 
 urlpatterns = [
@@ -18,5 +19,10 @@ urlpatterns = [
         "analyze_message_quality/",
         analyze_message_quality,
         name="analyze_message_quality",
+    ),
+    path(
+        "summarize_contributor_activity/",
+        summarize_contributor_activity,
+        name="summarize_contributor_activity",
     ),
 ]

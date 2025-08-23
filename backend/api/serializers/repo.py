@@ -95,3 +95,11 @@ class MessageQualityQuerySerializer(serializers.Serializer):
         default=0,
         help_text="Maximum number of messages to analyze (0 means all).",
     )
+
+
+class ContributorActivitySerializer(serializers.Serializer):
+    """Serializer for contributor activity summary."""
+
+    owner = serializers.CharField(help_text="Repository owner (user or organization)")
+    repo = serializers.CharField(help_text="Repository name")
+    contributor = serializers.CharField(help_text="Contributor's GitHub username")

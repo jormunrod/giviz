@@ -3,7 +3,8 @@ import { useRepo } from "../hooks/useRepo";
 import Card from "../components/Card";
 import { useEffect, useState } from "react";
 import GivizButton from "../components/GivizButton";
-import ContributorRolesPieChart from "../components/ContributorRolesPieChart";
+import ContributorRolesPieChart from "../components/Contributor/ContributorRolesPieChart";
+import ContributorSummary from "../components/Contributor/ContributorSummary";
 
 export default function Contributor() {
   const { username } = useParams();
@@ -120,6 +121,18 @@ export default function Contributor() {
               </div>
             </div>
           </div>
+        )}
+        <div>
+          <span className="font-semibold text-gray-700 mb-4">
+            Summary of Contributions
+          </span>
+        </div>
+        {repoInfo?.owner && repoInfo?.repo && username && (
+          <ContributorSummary
+            owner={repoInfo.owner}
+            repo={repoInfo.repo}
+            contributor={username}
+          />
         )}
         <div className="w-full mt-4 p-6 rounded-2xl flex flex-col items-center">
           <span className="font-semibold text-gray-700 mb-4">
