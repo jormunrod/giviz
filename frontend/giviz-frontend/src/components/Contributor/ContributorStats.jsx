@@ -108,7 +108,7 @@ export default function ContributorStats({ owner, repo, contributor }) {
       <div className="space-y-6">
         {/* Commits */}
         <div>
-          <div className="font-bold text-lg mb-2">Commits:</div>
+          <div className="font-bold text-[13px] mb-1">Commits:</div>
           <div className="ml-4">
             <div>
               Total: <span className="font-semibold">{totalCommits}</span>
@@ -121,7 +121,7 @@ export default function ContributorStats({ owner, repo, contributor }) {
                 : <span className="font-semibold">{n}</span>
               </div>
             ))}
-            <div className="mt-2">
+            <div>
               Commits quality:{" "}
               <span className="font-semibold">
                 {commitQuality !== null ? `${commitQuality}%` : "N/A"}
@@ -131,7 +131,7 @@ export default function ContributorStats({ owner, repo, contributor }) {
         </div>
         {/* Issues */}
         <div>
-          <div className="font-bold text-lg mb-2">Issues:</div>
+          <div className="font-bold text-[13px] mb-1">Issues:</div>
           <div className="ml-4">
             <div>
               Total: <span className="font-semibold">{totalIssues}</span>
@@ -144,7 +144,7 @@ export default function ContributorStats({ owner, repo, contributor }) {
                 : <span className="font-semibold">{n}</span>
               </div>
             ))}
-            <div className="mt-2">
+            <div>
               Issues quality:{" "}
               <span className="font-semibold">
                 {issueQuality !== null ? `${issueQuality}%` : "N/A"}
@@ -154,7 +154,7 @@ export default function ContributorStats({ owner, repo, contributor }) {
         </div>
         {/* PRs */}
         <div>
-          <div className="font-bold text-lg mb-2">Pull Requests:</div>
+          <div className="font-bold text-[13px] mb-1">Pull Requests:</div>
           <div className="ml-4">
             <div>
               Total: <span className="font-semibold">{totalPRs}</span>
@@ -167,7 +167,7 @@ export default function ContributorStats({ owner, repo, contributor }) {
                 : <span className="font-semibold">{n}</span>
               </div>
             ))}
-            <div className="mt-2">
+            <div>
               PRs quality:{" "}
               <span className="font-semibold">
                 {prQuality !== null ? `${prQuality}%` : "N/A"}
@@ -180,7 +180,7 @@ export default function ContributorStats({ owner, repo, contributor }) {
   }
 
   return (
-    <div className="text-xs leading-tight">
+    <div className="text-xs leading-tight text-left">
       {loading ? (
         <span className="text-gray-500">Loading stats...</span>
       ) : error ? (
