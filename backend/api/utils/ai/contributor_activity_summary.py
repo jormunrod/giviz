@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 
 from api.utils.common.save import load_repo_data
 from api.views import repo
+from api.utils.common.merge import merge_contributor_activity
 
 load_dotenv()
 
@@ -35,6 +36,71 @@ def get_contributor_info(owner, repo, contributor) -> dict:
     return contributors_list.get(contributor, {})
 
 
+def get_contributor_commits_summary(data) -> dict:
+    """
+    Fetch contributor commits summary from the provided data, filtering by the parameters of the list.
+    """
+    parameters = [
+        "hash",
+        "date",
+        "message",
+        "insertions",
+        "deletions",
+        "affected_extensions",
+        "category",
+        "score",
+        "suggestions",
+    ]
+    for commit in data.get("commits", []):
+        commit_summary = {
+            param: commit.get(param) for param in parameters if param in commit
+        }
+        if commit_summary:
+            yield commit_summary
+
+
+def get_contributor_issues_summary(data) -> dict:
+    """
+    Fetch contributor issues summary from the provided data, filtering by the parameters of the list.
+    """
+    parameters = [
+        "number",
+        "title",
+        "body",
+        "createdAt",
+        "closedAt",
+        "category",
+        "score",
+        "suggestions",
+    ]
+    for issue in data.get("issues", []):
+        issue_summary = {
+            param: issue.get(param) for param in parameters if param in issue
+        }
+        if issue_summary:
+            yield issue_summary
+
+
+def get_contributor_pull_requests_summary(data) -> dict:
+    """
+    Fetch contributor pull requests summary from the provided data, filtering by the parameters of the list.
+    """
+    parameters = [
+        "number",
+        "title",
+        "body",
+        "createdAt",
+        "mergedAt",
+        "category",
+        "score",
+        "suggestions",
+    ]
+    for pr in data.get("pull_requests", []):
+        pr_summary = {param: pr.get(param) for param in parameters if param in pr}
+        if pr_summary:
+            yield pr_summary
+
+
 def generate_contributor_activity_summary(
     owner, repo, contributor, model: str = "gpt-4.1-nano"
 ) -> str:
@@ -52,13 +118,21 @@ def generate_contributor_activity_summary(
     contributor_email = contributor_info.get("email", "Unknown Email")
     contributor_created_at = contributor_info.get("createdAt", "Unknown Created At")
 
-    return f"""
-    Contributor Name: {contributor_name}
-    Avatar: {contributor_avatar}
-    Profile URL: {contributor_url}
-    Bio: {contributor_bio}
-    Company: {contributor_company}
-    Location: {contributor_location}
-    Email: {contributor_email}
-    Created At: {contributor_created_at}
-    """
+    data = merge_contributor_activity(owner, repo, contributor, contributor_name)
+    commits_summary = list(get_contributor_commits_summary(data))
+    issues_summary = list(get_contributor_issues_summary(data))
+    pull_requests_summary = list(get_contributor_pull_requests_summary(data))
+
+    return {
+        "contributor_name": contributor_name,
+        "avatar": contributor_avatar,
+        "profile_url": contributor_url,
+        "bio": contributor_bio,
+        "company": contributor_company,
+        "location": contributor_location,
+        "email": contributor_email,
+        "created_at": contributor_created_at,
+        "commits_summary": commits_summary,
+        "issues_summary": issues_summary,
+        "pull_requests_summary": pull_requests_summary,
+    }

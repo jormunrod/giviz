@@ -89,3 +89,63 @@ def merge_contributions(
         save_repo_data(
             owner, repo, new_items, f"{name}_typed.json", subfolder=output_subfolder
         )
+
+
+def merge_contributor_activity(
+    owner: str, repo: str, contributor: str, contributor_name: str
+):
+    commits_list = []
+    issues_list = []
+    pulls_list = []
+
+    commits = load_repo_data(owner, repo, "commits_typed.json", subfolder="merged")
+    if commits:
+        for item in commits:
+            if (
+                item.get("author") == contributor_name
+                or item.get("email") == contributor
+                or item.get("committer") == contributor
+                or item.get("committer_email") == contributor
+            ):
+                commits_list.append(item)
+
+    issues = load_repo_data(owner, repo, "issues_typed.json", subfolder="merged")
+    if issues:
+        for item in issues:
+            login = None
+            if isinstance(item.get("author"), dict):
+                login = item["author"].get("login")
+            if not login:
+                login = item.get("login")
+            if login == contributor or login:
+                issues_list.append(item)
+
+    pulls = load_repo_data(owner, repo, "pulls_typed.json", subfolder="merged")
+    if pulls:
+        for item in pulls:
+            login = None
+            if isinstance(item.get("author"), dict):
+                login = item["author"].get("login")
+            if not login:
+                login = item.get("login")
+            if login == contributor:
+                pulls_list.append(item)
+
+    if not (commits_list or issues_list or pulls_list):
+        raise ValueError(f"No activity found for contributor {contributor}")
+
+    result = {
+        "commits": commits_list,
+        "issues": issues_list,
+        "pull_requests": pulls_list,
+    }
+
+    save_repo_data(
+        owner,
+        repo,
+        result,
+        contributor + "_activity.json",
+        subfolder="contributors",
+    )
+
+    return result
