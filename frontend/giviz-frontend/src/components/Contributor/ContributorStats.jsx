@@ -55,42 +55,41 @@ export default function ContributorStats({ owner, repo, contributor }) {
       issuesByCategory = {},
       prsByCategory = {};
     Object.entries(contributorStats).forEach(([category, catStats]) => {
+      const commitsArr = Array.isArray(catStats.commits)
+        ? catStats.commits
+        : [];
+      const issuesArr = Array.isArray(catStats.issues) ? catStats.issues : [];
+      const pullsArr = Array.isArray(catStats.pulls) ? catStats.pulls : [];
       // Commits
-      const nCommits = catStats.commits?.length || 0;
+      const nCommits = commitsArr.length;
       commitsByCategory[category] = nCommits;
       totalCommits += nCommits;
-      if (Array.isArray(catStats.commits)) {
-        catStats.commits.forEach((c) => {
-          if (typeof c.score === "number") {
-            totalCommitScore += c.score;
-            totalCommitScoreCount++;
-          }
-        });
-      }
+      commitsArr.forEach((c) => {
+        if (typeof c.score === "number") {
+          totalCommitScore += c.score;
+          totalCommitScoreCount++;
+        }
+      });
       // Issues
-      const nIssues = catStats.issues?.length || 0;
+      const nIssues = issuesArr.length;
       issuesByCategory[category] = nIssues;
       totalIssues += nIssues;
-      if (Array.isArray(catStats.issues)) {
-        catStats.issues.forEach((i) => {
-          if (typeof i.score === "number") {
-            totalIssueScore += i.score;
-            totalIssueScoreCount++;
-          }
-        });
-      }
+      issuesArr.forEach((i) => {
+        if (typeof i.score === "number") {
+          totalIssueScore += i.score;
+          totalIssueScoreCount++;
+        }
+      });
       // PRs
-      const nPRs = catStats.pulls?.length || 0;
+      const nPRs = pullsArr.length;
       prsByCategory[category] = nPRs;
       totalPRs += nPRs;
-      if (Array.isArray(catStats.pulls)) {
-        catStats.pulls.forEach((p) => {
-          if (typeof p.score === "number") {
-            totalPRScore += p.score;
-            totalPRScoreCount++;
-          }
-        });
-      }
+      pullsArr.forEach((p) => {
+        if (typeof p.score === "number") {
+          totalPRScore += p.score;
+          totalPRScoreCount++;
+        }
+      });
     });
     const commitQuality =
       totalCommitScoreCount > 0
@@ -181,7 +180,7 @@ export default function ContributorStats({ owner, repo, contributor }) {
   }
 
   return (
-    <div className="w-full max-w-2xl bg-blue-50 border border-blue-200 rounded-xl p-6 mt-4 shadow">
+    <div className="text-xs leading-tight">
       {loading ? (
         <span className="text-gray-500">Loading stats...</span>
       ) : error ? (
