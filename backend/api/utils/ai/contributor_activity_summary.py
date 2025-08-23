@@ -4,7 +4,6 @@ import json
 from dotenv import load_dotenv
 
 from api.utils.common.save import load_repo_data
-from api.views import repo
 from api.utils.common.merge import merge_contributor_activity
 
 load_dotenv()
@@ -15,7 +14,8 @@ BATCH_SIZE = os.getenv("AI_BATCH_SIZE", 20)
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 PROMPT_TEMPLATE = """
-You are an expert software development assistant. Your task is to generate a comprehensive summary of a contributor's activity in a software project based on the provided data. The summary should include key contributions, patterns in their work, and any notable achievements.
+You are an expert software development assistant. Your task is to generate a comprehensive summary of a contributor's activity in a software project based on the provided data.
+The summary should include key contributions, patterns in their work, and any notable achievements.
 You will be provided with data of the contributor's activity, including commits, issues, and pull requests.
 Please analyze the data and provide a structured summary of about 100-200 words, focusing on the most important aspects of the contributor's work.
 
@@ -82,8 +82,8 @@ An example of the data structure is as follows:
 
 An example of your response could be:
 
-The contributor "Contributor One" has made significant contributions to the project. 
-Their work primarily focuses on enhancing the project's functionality and fixing bugs. 
+The contributor "Contributor One" has made significant contributions to the project.
+Their work primarily focuses on enhancing the project's functionality and fixing bugs.
 Notable achievements include improving code quality and addressing user-reported issues.
 
 Now, please provide a summary of the contributor's activity based on the data provided:
