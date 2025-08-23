@@ -15,12 +15,85 @@ BATCH_SIZE = os.getenv("AI_BATCH_SIZE", 20)
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 PROMPT_TEMPLATE = """
-        
-        """
+You are an expert software development assistant. Your task is to generate a comprehensive summary of a contributor's activity in a software project based on the provided data. The summary should include key contributions, patterns in their work, and any notable achievements.
+You will be provided with data of the contributor's activity, including commits, issues, and pull requests.
+Please analyze the data and provide a structured summary of about 100-200 words, focusing on the most important aspects of the contributor's work.
 
-EXAMPLE_INPUT = "json.dumps()"
+The data provided has the following structure:
 
-EXAMPLE_OUTPUT = "json.dumps()"
+- Contributor: The contributor name.
+- Commits: A list of commit objects, each containing details about the commit.
+- Issues: A list of issue objects, each containing details about the issue.
+- Pull Requests: A list of pull request objects, each containing details about the pull request.
+
+An example of the data structure is as follows:
+
+{
+  "contributor": "Contributor One",
+  "commits": [
+    {
+      "hash": "abc123",
+      "date": "2023-01-01",
+      "message": "Initial commit",
+      "insertions": 10,
+      "deletions": 2,
+      "affected_extensions": [
+        ".py"
+        ".js"
+      ]
+      "category": "feature",
+      "score": 5,
+      "suggestions": [
+        "Consider breaking this commit into smaller, more focused commits.",
+        "Add more tests to cover the changes introduced in this commit."
+      ]
+  ],
+  "issues": [
+    {
+      "number": 1,
+      "title": "Issue title",
+      "body": "Issue description",
+      "createdAt": "2023-01-02",
+      "closedAt": "2023-01-03",
+      "category": "bug",
+      "score": 3,
+      "suggestions": [
+        "Provide more context about the issue.",
+        "Add steps to reproduce the issue."
+      ]
+    }
+  ],
+  "pull_requests": [
+    {
+      "number": 1,
+      "title": "PR title",
+      "body": "PR description",
+      "createdAt": "2023-01-04",
+      "mergedAt": "2023-01-05",
+      "category": "enhancement",
+      "score": 4,
+      "suggestions": [
+        "Add more context about the changes introduced in this PR.",
+        "Include links to related issues or discussions."
+      ]
+    }
+  ]
+}
+
+An example of your response could be:
+
+The contributor "Contributor One" has made significant contributions to the project. 
+Their work primarily focuses on enhancing the project's functionality and fixing bugs. 
+Notable achievements include improving code quality and addressing user-reported issues.
+
+Now, please provide a summary of the contributor's activity based on the data provided:
+
+{PROMPT_DATA}
+
+Answer only with the summary of the contributor's activity in English.
+"""
+
+PROMPT_DATA = " "
 
 
 def get_contributor_info(owner, repo, contributor) -> dict:
@@ -101,38 +174,48 @@ def get_contributor_pull_requests_summary(data) -> dict:
             yield pr_summary
 
 
+def prepare_prompt(owner, repo, contributor) -> str:
+    """
+    Prepare the prompt for the AI model using the contributor activity data.
+    """
+    contributor_name = get_contributor_info(owner, repo, contributor).get(
+        "name", "Unknown Contributor"
+    )
+    data = merge_contributor_activity(owner, repo, contributor, contributor_name)
+    commits_summary = list(get_contributor_commits_summary(data))
+    issues_summary = list(get_contributor_issues_summary(data))
+    pull_requests_summary = list(get_contributor_pull_requests_summary(data))
+
+    prompt = PROMPT_TEMPLATE.replace(
+        "{PROMPT_DATA}",
+        json.dumps(
+            {
+                "contributor": contributor_name,
+                "commits": commits_summary,
+                "issues": issues_summary,
+                "pull_requests": pull_requests_summary,
+            },
+            indent=2,
+        ),
+    )
+
+    return prompt
+
+
 def generate_contributor_activity_summary(
     owner, repo, contributor, model: str = "gpt-4.1-nano"
 ) -> str:
     """
     Generates a summary of contributor activity using AI and the data provided.
     """
-    contributor_info = get_contributor_info(owner, repo, contributor)
-
-    contributor_name = contributor_info.get("name", "Unknown Contributor")
-    contributor_avatar = contributor_info.get("avatarUrl", "Unknown Avatar")
-    contributor_url = contributor_info.get("url", "Unknown URL")
-    contributor_bio = contributor_info.get("bio", "Unknown Bio")
-    contributor_company = contributor_info.get("company", "Unknown Company")
-    contributor_location = contributor_info.get("location", "Unknown Location")
-    contributor_email = contributor_info.get("email", "Unknown Email")
-    contributor_created_at = contributor_info.get("createdAt", "Unknown Created At")
-
-    data = merge_contributor_activity(owner, repo, contributor, contributor_name)
-    commits_summary = list(get_contributor_commits_summary(data))
-    issues_summary = list(get_contributor_issues_summary(data))
-    pull_requests_summary = list(get_contributor_pull_requests_summary(data))
-
-    return {
-        "contributor_name": contributor_name,
-        "avatar": contributor_avatar,
-        "profile_url": contributor_url,
-        "bio": contributor_bio,
-        "company": contributor_company,
-        "location": contributor_location,
-        "email": contributor_email,
-        "created_at": contributor_created_at,
-        "commits_summary": commits_summary,
-        "issues_summary": issues_summary,
-        "pull_requests_summary": pull_requests_summary,
-    }
+    prompt = prepare_prompt(owner, repo, contributor)
+    print("Prompt for AI classification:\n", prompt)
+    print("Using model:", model)
+    response = client.chat.completions.create(
+        model=model,
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=5000,
+        temperature=0.5,
+    )
+    content = response.choices[0].message.content
+    return content.strip()
