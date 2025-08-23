@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import GivizButton from "../components/GivizButton";
 import ContributorRolesPieChart from "../components/Contributor/ContributorRolesPieChart";
 import ContributorSummary from "../components/Contributor/ContributorSummary";
+import ContributorStats from "../components/Contributor/ContributorStats";
 
 export default function Contributor() {
   const { username } = useParams();
@@ -148,6 +149,16 @@ export default function Contributor() {
             </div>
           )}
         </div>
+        <div>
+          <span className="font-semibold text-gray-700 mb-4">Stats</span>
+        </div>
+        {repoInfo?.owner && repoInfo?.repo && username && (
+          <ContributorStats
+            owner={repoInfo.owner}
+            repo={repoInfo.repo}
+            contributor={username}
+          />
+        )}
       </Card>
     </div>
   );
