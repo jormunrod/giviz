@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import GivizButton from "../components/GivizButton";
 import ContributorRolesPieChart from "../components/Contributor/ContributorRolesPieChart";
 import ContributorSummary from "../components/Contributor/ContributorSummary";
+import ContributorStats from "../components/Contributor/ContributorStats";
+import ContributorTimelineChart from "../components/Contributor/ContributorTimelineChart";
 
 export default function Contributor() {
   const { username } = useParams();
@@ -47,7 +49,7 @@ export default function Contributor() {
       >
         ← Back to general analysis
       </GivizButton>
-      <Card className="w-full max-w-3xl p-10 flex flex-col items-center border border-gray-200">
+      <Card className="w-full max-w-3xl p-10 flex flex-col items-center">
         {loading ? (
           <span className="text-gray-500">Loading contributor...</span>
         ) : error ? (
@@ -122,7 +124,7 @@ export default function Contributor() {
             </div>
           </div>
         )}
-        <div>
+        <div className="flex justify-center w-full">
           <span className="font-semibold text-gray-700 mb-4">
             Summary of Contributions
           </span>
@@ -134,16 +136,40 @@ export default function Contributor() {
             contributor={username}
           />
         )}
-        <div className="w-full mt-4 p-6 rounded-2xl flex flex-col items-center">
-          <span className="font-semibold text-gray-700 mb-4">
-            Collaborative Roles
-          </span>
-          {repoInfo?.owner && repoInfo?.repo && username && (
-            <div className="w-full max-w-md">
-              <ContributorRolesPieChart
+        <div className="w-full mt-8 grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+          <div className="flex flex-col items-center">
+            <span className="font-semibold text-gray-700 mb-4">Stats</span>
+            {repoInfo?.owner && repoInfo?.repo && username && (
+              <ContributorStats
                 owner={repoInfo.owner}
                 repo={repoInfo.repo}
-                username={username}
+                contributor={username}
+              />
+            )}
+          </div>
+          <div className="flex flex-col items-center w-full">
+            <span className="font-semibold text-gray-700 mb-4">
+              Collaborative Roles
+            </span>
+            {repoInfo?.owner && repoInfo?.repo && username && (
+              <div className="w-full max-w-md mb-6">
+                <ContributorRolesPieChart
+                  owner={repoInfo.owner}
+                  repo={repoInfo.repo}
+                  username={username}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="w-full mt-8 flex flex-col items-center">
+          <span className="font-semibold text-gray-700 mb-4">Timeline</span>
+          {repoInfo?.owner && repoInfo?.repo && username && (
+            <div className="w-full max-w-2xl mx-auto">
+              <ContributorTimelineChart
+                owner={repoInfo.owner}
+                repo={repoInfo.repo}
+                contributor={username}
               />
             </div>
           )}

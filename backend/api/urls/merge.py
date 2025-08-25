@@ -1,5 +1,6 @@
 from django.urls import path
 from api.views.merge import (
+    contributor_stats_view,
     merge_contributions_view,
     contributors_by_category_view,
     contributors_effort_by_category_view,
@@ -13,6 +14,11 @@ urlpatterns = [
         "contributors_by_category/",
         contributors_by_category_view,
         name="contributors_by_category",
+    ),
+    path(
+        "contributor_stats/",
+        contributor_stats_view,
+        name="contributor_stats",
     ),
     path(
         "contributors_effort_by_category/",

@@ -2,7 +2,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from drf_yasg.utils import swagger_auto_schema
-from api.serializers.repo import RepoQuerySerializer
+from api.serializers.repo import ContributorActivitySerializer, RepoQuerySerializer
 from api.utils.common.merge import merge_contributions
 from api.utils.common.save import load_repo_data
 
@@ -106,6 +106,102 @@ def contributors_by_category_view(request):
         num = p.get("number")
         add_contrib(contrib, category, num, "pulls")
     return Response({"status": "ok", "contributors": result})
+
+
+@swagger_auto_schema(method="post", request_body=ContributorActivitySerializer)
+@api_view(["POST"])
+def contributor_stats_view(request):
+    """Returns for the specified contributor, the activity grouped by category."""
+    serializer = ContributorActivitySerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(
+            {"error": "Missing or invalid parameters", "detail": serializer.errors},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    owner = serializer.validated_data["owner"]
+    repo = serializer.validated_data["repo"]
+    contributor = serializer.validated_data["contributor"]
+    try:
+        merge_contributions(owner, repo)
+    except FileNotFoundError as e:
+        return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    commits = (
+        load_repo_data(owner, repo, "commits_typed.json", subfolder="merged") or []
+    )
+    issues = load_repo_data(owner, repo, "issues_typed.json", subfolder="merged") or []
+    pulls = load_repo_data(owner, repo, "pulls_typed.json", subfolder="merged") or []
+    contributors = (
+        load_repo_data(owner, repo, "contributors_typed.json", subfolder="merged") or []
+    )
+    name_to_login = {}
+    for c in contributors:
+        login = c.get("login") or c.get("username")
+        name = c.get("name")
+        if login and name:
+            name_to_login[name] = login
+    result = {}
+
+    def format_date(date_str):
+        if not date_str:
+            return None
+        try:
+            if "T" in date_str:
+                return date_str.split("T")[0]
+            return date_str[:10]
+        except Exception:
+            return date_str
+
+    def add_contrib(contrib, category, item, type_):
+        contrib_id = get_contrib_id(contrib, name_to_login)
+        if not contrib_id:
+            return
+        if contrib_id not in result:
+            result[contrib_id] = {}
+        if category not in result[contrib_id]:
+            result[contrib_id][category] = {"commits": [], "issues": [], "pulls": []}
+        if type_ == "commits":
+            date_val = item.get("date") or item.get("committer_date")
+            entry = {
+                "hash": item.get("hash"),
+                "score": item.get("score"),
+                "date": format_date(date_val),
+            }
+        elif type_ == "issues":
+            date_val = item.get("createdAt") or item.get("created_at")
+            entry = {
+                "number": item.get("number"),
+                "score": item.get("score"),
+                "date": format_date(date_val),
+            }
+        elif type_ == "pulls":
+            date_val = item.get("createdAt") or item.get("created_at")
+            entry = {
+                "number": item.get("number"),
+                "score": item.get("score"),
+                "date": format_date(date_val),
+            }
+        else:
+            entry = item
+        result[contrib_id][category][type_].append(entry)
+
+    for c in commits:
+        contrib = c.get("author")
+        category = c.get("category", "uncategorized")
+        add_contrib(contrib, category, c, "commits")
+    for i in issues:
+        contrib = i.get("author")
+        category = i.get("category", "uncategorized")
+        add_contrib(contrib, category, i, "issues")
+    for p in pulls:
+        contrib = p.get("author")
+        category = p.get("category", "uncategorized")
+        add_contrib(contrib, category, p, "pulls")
+
+    requested_contrib_id = get_contrib_id(contributor, name_to_login)
+    filtered_result = {requested_contrib_id: result.get(requested_contrib_id, {})}
+    return Response({"status": "ok", "stats": filtered_result})
 
 
 @swagger_auto_schema(method="post", request_body=RepoQuerySerializer)

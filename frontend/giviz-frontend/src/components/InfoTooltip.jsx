@@ -35,7 +35,7 @@ export default function InfoTooltip({ text }) {
         </svg>
       </button>
       {show && (
-        <div className="absolute z-10 left-1/2 -translate-x-1/2 mt-2 w-64 p-3 bg-white border border-gray-300 rounded shadow-lg text-sm text-gray-700">
+        <div className="absolute z-10 left-1/2 -translate-x-1/2 mt-1 w-44 p-2 bg-white border border-gray-300 rounded shadow text-xs text-gray-700 max-w-xs">
           {text}
         </div>
       )}
