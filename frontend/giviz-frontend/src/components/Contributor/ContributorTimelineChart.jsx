@@ -9,13 +9,16 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
+
 import InfoTooltip from "../InfoTooltip";
+import GivizButton from "../GivizButton";
 
 export default function ContributorTimelineRecharts({
   owner,
   repo,
   contributor,
 }) {
+  const [selectedCategories, setSelectedCategories] = useState(["null"]);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -52,9 +55,9 @@ export default function ContributorTimelineRecharts({
     fetchStats();
   }, [owner, repo, contributor]);
 
-  function buildTimelineData(statsByCategory) {
+  function buildTimelineData(selectedCatStatsArr) {
     const dateMap = {};
-    Object.values(statsByCategory).forEach((catStats) => {
+    selectedCatStatsArr.forEach((catStats) => {
       ["commits", "issues", "pulls"].forEach((type) => {
         (catStats[type] || []).forEach((item) => {
           const date = item.date;
@@ -68,9 +71,24 @@ export default function ContributorTimelineRecharts({
     return dates.map((date) => dateMap[date]);
   }
 
+  const categories = data ? Object.keys(data) : [];
+
   let chartData = null;
-  if (data) {
-    chartData = buildTimelineData(data);
+  if (data && selectedCategories.length > 0) {
+    const selectedCatStatsArr = selectedCategories
+      .map((cat) => data[cat])
+      .filter(Boolean);
+    chartData = buildTimelineData(selectedCatStatsArr);
+  }
+
+  function toggleCategory(cat) {
+    setSelectedCategories((prev) =>
+      prev.includes(cat)
+        ? prev.length === 1
+          ? prev
+          : prev.filter((c) => c !== cat)
+        : [...prev, cat]
+    );
   }
 
   return (
@@ -79,6 +97,23 @@ export default function ContributorTimelineRecharts({
         <span className="font-semibold text-sm">Contributions over time</span>
         <InfoTooltip text="Shows the number of commits, issues, and PRs per day for this contributor." />
       </div>
+      {/* Category selector múltiple */}
+      {categories.length > 1 && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {categories.map((cat) => (
+            <GivizButton
+              key={cat}
+              variant={
+                selectedCategories.includes(cat) ? "primary" : "secondary"
+              }
+              className="text-xs px-3 py-1"
+              onClick={() => toggleCategory(cat)}
+            >
+              {cat === "null" ? "General" : cat}
+            </GivizButton>
+          ))}
+        </div>
+      )}
       {loading ? (
         <span className="text-gray-500">Loading timeline...</span>
       ) : error ? (
