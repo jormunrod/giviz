@@ -19,7 +19,7 @@ export default function ContributorTimelineRecharts({
   repo,
   contributor,
 }) {
-  const [selectedCategories, setSelectedCategories] = useState(["null"]);
+  const [selectedCategories, setSelectedCategories] = useState([]);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -45,6 +45,10 @@ export default function ContributorTimelineRecharts({
         const result = await res.json();
         if (res.ok && result.stats && result.stats[contributor]) {
           setData(result.stats[contributor]);
+          const firstCat = Object.keys(result.stats[contributor])[0];
+          setSelectedCategories((prev) =>
+            prev.length === 0 && firstCat ? [firstCat] : prev
+          );
         } else {
           setError(result.error || "No stats available");
         }
@@ -108,17 +112,7 @@ export default function ContributorTimelineRecharts({
   }
 
   return (
-    <div className="w-full max-w-2xlrounded-xl p-4 mt-4 shadow-sm">
-      <div className="flex items-center gap-2 mb-2">
-        <span className="font-semibold text-sm">Contributions over time</span>
-        <InfoTooltip
-          text={
-            "Shows the number of contributions (commits, issues, PRs) over time for " +
-            contributor +
-            "."
-          }
-        />
-      </div>
+    <div className="w-full max-w-2xlrounded-xl p-2 shadow-sm">
       <div className="flex items-center gap-2 mb-4">
         <span className="text-xs font-medium">Group by:</span>
         <GivizSegmentedSelector
@@ -134,18 +128,20 @@ export default function ContributorTimelineRecharts({
       {categories.length > 1 && (
         <div className="flex items-center gap-2 mb-4">
           <span className="text-xs font-medium">Categories:</span>
-          {categories.map((cat) => (
-            <GivizButton
-              key={cat}
-              variant={
-                selectedCategories.includes(cat) ? "primary" : "secondary"
-              }
-              className="text-xs px-3 py-1"
-              onClick={() => toggleCategory(cat)}
-            >
-              {cat === "null" ? "General" : cat}
-            </GivizButton>
-          ))}
+          <div className="flex flex-wrap gap-2 py-1">
+            {categories.map((cat) => (
+              <GivizButton
+                key={cat}
+                variant={
+                  selectedCategories.includes(cat) ? "primary" : "secondary"
+                }
+                className="text-xs px-3 py-1 whitespace-nowrap"
+                onClick={() => toggleCategory(cat)}
+              >
+                {cat === "null" ? "General" : cat}
+              </GivizButton>
+            ))}
+          </div>
         </div>
       )}
       {loading ? (
