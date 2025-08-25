@@ -12,6 +12,7 @@ import {
 
 import InfoTooltip from "../InfoTooltip";
 import GivizButton from "../GivizButton";
+import GivizSegmentedSelector from "../GivizSegmentedSelector";
 
 export default function ContributorTimelineRecharts({
   owner,
@@ -22,6 +23,7 @@ export default function ContributorTimelineRecharts({
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [groupBy, setGroupBy] = useState("month");
 
   useEffect(() => {
     if (!owner || !repo || !contributor) return;
@@ -55,15 +57,29 @@ export default function ContributorTimelineRecharts({
     fetchStats();
   }, [owner, repo, contributor]);
 
+  function formatDate(dateStr, groupBy) {
+    if (groupBy === "year") {
+      return dateStr.slice(0, 4);
+    } else if (groupBy === "month") {
+      return dateStr.slice(0, 7); // YYYY-MM
+    }
+    return dateStr; // day (YYYY-MM-DD)
+  }
+
   function buildTimelineData(selectedCatStatsArr) {
     const dateMap = {};
     selectedCatStatsArr.forEach((catStats) => {
       ["commits", "issues", "pulls"].forEach((type) => {
         (catStats[type] || []).forEach((item) => {
-          const date = item.date;
-          if (!dateMap[date])
-            dateMap[date] = { date, commits: 0, issues: 0, pulls: 0 };
-          dateMap[date][type] += 1;
+          const groupKey = formatDate(item.date, groupBy);
+          if (!dateMap[groupKey])
+            dateMap[groupKey] = {
+              date: groupKey,
+              commits: 0,
+              issues: 0,
+              pulls: 0,
+            };
+          dateMap[groupKey][type] += 1;
         });
       });
     });
@@ -97,9 +113,22 @@ export default function ContributorTimelineRecharts({
         <span className="font-semibold text-sm">Contributions over time</span>
         <InfoTooltip text="Shows the number of commits, issues, and PRs per day for this contributor." />
       </div>
+      <div className="flex items-center gap-2 mb-4">
+        <span className="text-xs font-medium">Group by:</span>
+        <GivizSegmentedSelector
+          options={[
+            { value: "year", label: "Year" },
+            { value: "month", label: "Month" },
+            { value: "day", label: "Day" },
+          ]}
+          value={groupBy}
+          onChange={setGroupBy}
+        />
+      </div>
       {/* Category selector múltiple */}
       {categories.length > 1 && (
-        <div className="flex flex-wrap gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-xs font-medium">Categories:</span>
           {categories.map((cat) => (
             <GivizButton
               key={cat}
