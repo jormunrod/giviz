@@ -61,9 +61,9 @@ export default function ContributorTimelineRecharts({
     if (groupBy === "year") {
       return dateStr.slice(0, 4);
     } else if (groupBy === "month") {
-      return dateStr.slice(0, 7); // YYYY-MM
+      return dateStr.slice(0, 7);
     }
-    return dateStr; // day (YYYY-MM-DD)
+    return dateStr;
   }
 
   function buildTimelineData(selectedCatStatsArr) {
@@ -108,10 +108,16 @@ export default function ContributorTimelineRecharts({
   }
 
   return (
-    <div className="w-full max-w-2xl bg-white border border-gray-100 rounded-xl p-4 mt-4 shadow-sm">
+    <div className="w-full max-w-2xlrounded-xl p-4 mt-4 shadow-sm">
       <div className="flex items-center gap-2 mb-2">
         <span className="font-semibold text-sm">Contributions over time</span>
-        <InfoTooltip text="Shows the number of commits, issues, and PRs per day for this contributor." />
+        <InfoTooltip
+          text={
+            "Shows the number of contributions (commits, issues, PRs) over time for " +
+            contributor +
+            "."
+          }
+        />
       </div>
       <div className="flex items-center gap-2 mb-4">
         <span className="text-xs font-medium">Group by:</span>
@@ -125,7 +131,6 @@ export default function ContributorTimelineRecharts({
           onChange={setGroupBy}
         />
       </div>
-      {/* Category selector múltiple */}
       {categories.length > 1 && (
         <div className="flex items-center gap-2 mb-4">
           <span className="text-xs font-medium">Categories:</span>
