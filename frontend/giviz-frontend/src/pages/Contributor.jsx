@@ -136,40 +136,44 @@ export default function Contributor() {
             contributor={username}
           />
         )}
-        <div className="w-full mt-4 p-6 rounded-2xl flex flex-col items-center">
-          <span className="font-semibold text-gray-700 mb-4">
-            Collaborative Roles
-          </span>
-          {repoInfo?.owner && repoInfo?.repo && username && (
-            <div className="w-full max-w-md">
-              <ContributorRolesPieChart
+        <div className="w-full mt-8 grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+          <div className="flex flex-col items-center md:items-start">
+            <span className="font-semibold text-gray-700 mb-4">Stats</span>
+            {repoInfo?.owner && repoInfo?.repo && username && (
+              <ContributorStats
                 owner={repoInfo.owner}
                 repo={repoInfo.repo}
-                username={username}
+                contributor={username}
+              />
+            )}
+          </div>
+          <div className="flex flex-col items-center w-full">
+            <span className="font-semibold text-gray-700 mb-4">
+              Collaborative Roles
+            </span>
+            {repoInfo?.owner && repoInfo?.repo && username && (
+              <div className="w-full max-w-md mb-6">
+                <ContributorRolesPieChart
+                  owner={repoInfo.owner}
+                  repo={repoInfo.repo}
+                  username={username}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="w-full mt-8 flex flex-col items-center">
+          <span className="font-semibold text-gray-700 mb-4">Timeline</span>
+          {repoInfo?.owner && repoInfo?.repo && username && (
+            <div className="w-full">
+              <ContributorTimelineChart
+                owner={repoInfo.owner}
+                repo={repoInfo.repo}
+                contributor={username}
               />
             </div>
           )}
         </div>
-        <div>
-          <span className="font-semibold text-gray-700 mb-4">Stats</span>
-        </div>
-        {repoInfo?.owner && repoInfo?.repo && username && (
-          <ContributorStats
-            owner={repoInfo.owner}
-            repo={repoInfo.repo}
-            contributor={username}
-          />
-        )}
-        <div>
-          <span className="font-semibold text-gray-700 mb-4">Timeline</span>
-        </div>
-        {repoInfo?.owner && repoInfo?.repo && username && (
-          <ContributorTimelineChart
-            owner={repoInfo.owner}
-            repo={repoInfo.repo}
-            contributor={username}
-          />
-        )}
       </Card>
     </div>
   );
