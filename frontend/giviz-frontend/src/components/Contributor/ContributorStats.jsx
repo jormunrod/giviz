@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import InfoTooltip from "../InfoTooltip";
 
 export default function ContributorStats({ owner, repo, contributor }) {
   const [stats, setStats] = useState(null);

@@ -48,7 +48,7 @@ export default function Contributor() {
       >
         ← Back to general analysis
       </GivizButton>
-      <Card className="w-full max-w-3xl p-10 flex flex-col items-center border border-gray-200">
+      <Card className="w-full max-w-3xl p-10 flex flex-col items-center">
         {loading ? (
           <span className="text-gray-500">Loading contributor...</span>
         ) : error ? (
