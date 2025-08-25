@@ -165,7 +165,7 @@ export default function Contributor() {
         <div className="w-full mt-8 flex flex-col items-center">
           <span className="font-semibold text-gray-700 mb-4">Timeline</span>
           {repoInfo?.owner && repoInfo?.repo && username && (
-            <div className="w-full">
+            <div className="w-full max-w-2xl mx-auto">
               <ContributorTimelineChart
                 owner={repoInfo.owner}
                 repo={repoInfo.repo}
