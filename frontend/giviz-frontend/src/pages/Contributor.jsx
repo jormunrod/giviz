@@ -124,7 +124,7 @@ export default function Contributor() {
             </div>
           </div>
         )}
-        <div>
+        <div className="flex justify-center w-full">
           <span className="font-semibold text-gray-700 mb-4">
             Summary of Contributions
           </span>
@@ -137,7 +137,7 @@ export default function Contributor() {
           />
         )}
         <div className="w-full mt-8 grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-          <div className="flex flex-col items-center md:items-start">
+          <div className="flex flex-col items-center">
             <span className="font-semibold text-gray-700 mb-4">Stats</span>
             {repoInfo?.owner && repoInfo?.repo && username && (
               <ContributorStats
