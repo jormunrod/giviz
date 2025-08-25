@@ -17,9 +17,7 @@ export default function ContributorStats({ owner, repo, contributor }) {
         const body = JSON.stringify({ owner, repo, contributor });
         const res = await fetch(url, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body,
         });
         const data = await res.json();
@@ -37,6 +35,33 @@ export default function ContributorStats({ owner, repo, contributor }) {
     fetchStats();
   }, [owner, repo, contributor]);
 
+  function QualityBar({ value }) {
+    if (value === null) return <span className="text-gray-400 ml-1">N/A</span>;
+    const pct = value;
+    const color =
+      pct >= 80
+        ? "bg-green-500"
+        : pct >= 60
+        ? "bg-emerald-400"
+        : pct >= 40
+        ? "bg-amber-400"
+        : pct >= 20
+        ? "bg-orange-500"
+        : "bg-red-500";
+    return (
+      <span className="inline-flex items-center gap-2 ml-1">
+        <span className="relative inline-block w-24 h-2 rounded bg-gray-200 overflow-hidden align-middle">
+          <span
+            className={`${color} absolute inset-y-0 left-0`}
+            style={{ width: `${pct}%` }}
+            aria-label={`Quality ${pct}%`}
+          />
+        </span>
+        <span className="tabular-nums">{pct}%</span>
+      </span>
+    );
+  }
+
   function renderStats(stats) {
     if (!stats || typeof stats !== "object") return null;
     const contributorStats = stats[contributor];
@@ -51,16 +76,18 @@ export default function ContributorStats({ owner, repo, contributor }) {
     let totalPRs = 0,
       totalPRScore = 0,
       totalPRScoreCount = 0;
+
     const commitsByCategory = {},
       issuesByCategory = {},
       prsByCategory = {};
+
     Object.entries(contributorStats).forEach(([category, catStats]) => {
       const commitsArr = Array.isArray(catStats.commits)
         ? catStats.commits
         : [];
       const issuesArr = Array.isArray(catStats.issues) ? catStats.issues : [];
       const pullsArr = Array.isArray(catStats.pulls) ? catStats.pulls : [];
-      // Commits
+
       const nCommits = commitsArr.length;
       commitsByCategory[category] = nCommits;
       totalCommits += nCommits;
@@ -70,7 +97,7 @@ export default function ContributorStats({ owner, repo, contributor }) {
           totalCommitScoreCount++;
         }
       });
-      // Issues
+
       const nIssues = issuesArr.length;
       issuesByCategory[category] = nIssues;
       totalIssues += nIssues;
@@ -80,7 +107,7 @@ export default function ContributorStats({ owner, repo, contributor }) {
           totalIssueScoreCount++;
         }
       });
-      // PRs
+
       const nPRs = pullsArr.length;
       prsByCategory[category] = nPRs;
       totalPRs += nPRs;
@@ -91,87 +118,76 @@ export default function ContributorStats({ owner, repo, contributor }) {
         }
       });
     });
+
     const commitQuality =
       totalCommitScoreCount > 0
-        ? ((totalCommitScore / (totalCommitScoreCount * 10)) * 100).toFixed(1)
+        ? +((totalCommitScore / (totalCommitScoreCount * 10)) * 100).toFixed(1)
         : null;
     const issueQuality =
       totalIssueScoreCount > 0
-        ? ((totalIssueScore / (totalIssueScoreCount * 10)) * 100).toFixed(1)
+        ? +((totalIssueScore / (totalIssueScoreCount * 10)) * 100).toFixed(1)
         : null;
     const prQuality =
       totalPRScoreCount > 0
-        ? ((totalPRScore / (totalPRScoreCount * 10)) * 100).toFixed(1)
+        ? +((totalPRScore / (totalPRScoreCount * 10)) * 100).toFixed(1)
         : null;
+
+    const prettyCat = (cat) =>
+      cat === "null" ? "General" : cat.charAt(0).toUpperCase() + cat.slice(1);
 
     return (
       <div className="space-y-6">
         {/* Commits */}
         <div>
           <div className="font-bold text-[13px] mb-1">Commits:</div>
-          <div className="ml-4">
+          <div className="ml-4 space-y-1">
             <div>
               Total: <span className="font-semibold">{totalCommits}</span>
             </div>
             {Object.entries(commitsByCategory).map(([cat, n]) => (
               <div key={cat}>
-                {cat === "null"
-                  ? "General"
-                  : cat.charAt(0).toUpperCase() + cat.slice(1)}
-                : <span className="font-semibold">{n}</span>
+                {prettyCat(cat)}: <span className="font-semibold">{n}</span>
               </div>
             ))}
             <div>
-              Commits quality:{" "}
-              <span className="font-semibold">
-                {commitQuality !== null ? `${commitQuality}%` : "N/A"}
-              </span>
+              Quality:
+              <QualityBar value={commitQuality} />
             </div>
           </div>
         </div>
         {/* Issues */}
         <div>
           <div className="font-bold text-[13px] mb-1">Issues:</div>
-          <div className="ml-4">
+          <div className="ml-4 space-y-1">
             <div>
               Total: <span className="font-semibold">{totalIssues}</span>
             </div>
             {Object.entries(issuesByCategory).map(([cat, n]) => (
               <div key={cat}>
-                {cat === "null"
-                  ? "General"
-                  : cat.charAt(0).toUpperCase() + cat.slice(1)}
-                : <span className="font-semibold">{n}</span>
+                {prettyCat(cat)}: <span className="font-semibold">{n}</span>
               </div>
             ))}
             <div>
-              Issues quality:{" "}
-              <span className="font-semibold">
-                {issueQuality !== null ? `${issueQuality}%` : "N/A"}
-              </span>
+              Quality:
+              <QualityBar value={issueQuality} />
             </div>
           </div>
         </div>
         {/* PRs */}
         <div>
           <div className="font-bold text-[13px] mb-1">Pull Requests:</div>
-          <div className="ml-4">
+          <div className="ml-4 space-y-1">
             <div>
               Total: <span className="font-semibold">{totalPRs}</span>
             </div>
             {Object.entries(prsByCategory).map(([cat, n]) => (
               <div key={cat}>
-                {cat === "null"
-                  ? "General"
-                  : cat.charAt(0).toUpperCase() + cat.slice(1)}
-                : <span className="font-semibold">{n}</span>
+                {prettyCat(cat)}: <span className="font-semibold">{n}</span>
               </div>
             ))}
             <div>
-              PRs quality:{" "}
-              <span className="font-semibold">
-                {prQuality !== null ? `${prQuality}%` : "N/A"}
-              </span>
+              Quality:
+              <QualityBar value={prQuality} />
             </div>
           </div>
         </div>
