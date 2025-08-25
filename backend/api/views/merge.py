@@ -143,8 +143,6 @@ def contributor_stats_view(request):
             name_to_login[name] = login
     result = {}
 
-    from datetime import datetime
-
     def format_date(date_str):
         if not date_str:
             return None
