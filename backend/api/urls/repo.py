@@ -5,4 +5,5 @@ from api.views import repo
 urlpatterns = [
     path("check/", repo.check_repo, name="check_repo"),
     path("extract_all/", repo.extract_all_data, name="extract_all_data"),
+    path("status/", repo.repo_status_view, name="repo_status"),
 ]
