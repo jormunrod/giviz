@@ -7,8 +7,42 @@ import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "./LoadingSpinner";
 
 export default function RepoInput() {
+  const API_BASE =
+    import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
+
+  const checkRepoStatus = async ({ owner, repo }) => {
+    try {
+      const res = await fetch(`${API_BASE}/repo/status/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ owner, repo }),
+      });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (err) {
+      console.error("Error checking repo status:", err);
+      return null;
+    }
+  };
   const fetchMessageQuality = async ({ owner, repo }) => {
     try {
+      // 1) Try to load cached message quality
+      const resCached = await fetch(
+        `${API_BASE}/merge/contributors_message_quality/`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ owner, repo }),
+        }
+      );
+      if (resCached.ok) {
+        const data = await resCached.json();
+        if (data?.status === "ok" && Array.isArray(data.data)) {
+          return { status: "ok", results: data.data };
+        }
+      }
+
+      // 2) If not cached, compute now
       const res = await fetch(`${API_BASE}/analysis/analyze_message_quality/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -48,9 +82,6 @@ export default function RepoInput() {
     },
     { label: "Mastodon", url: "https://github.com/mastodon/mastodon" },
   ];
-
-  const API_BASE =
-    import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
 
   const extractOwnerRepo = (url) => {
     const regex = /github\.com\/([\w.-]+)\/([\w.-]+)(\/)?$/;
@@ -134,12 +165,25 @@ export default function RepoInput() {
     const result = extractOwnerRepo(trimmed);
     if (result) {
       setLoading(true);
-      setStep("Cloning and extracting repository data...");
-      const extractResult = await extractAll({ ...result, depth: 0 });
-      if (extractResult && extractResult.status === "ok") {
-        setStep("Analyzing contributions with AI...");
+      // Check repo status to see if cache is available
+      const status = await checkRepoStatus(result);
+      let useCache = false;
+      if (status?.available) {
+        const last = status?.last_updated
+          ? new Date(status.last_updated).toLocaleString()
+          : "unknown date";
+        const msg = status?.stale_hint
+          ? `Saved data found (last update: ${last}). It appears to be old. Use it anyway?`
+          : `Saved data found (last update: ${last}). Do you want to use it to save time?`;
+        useCache = window.confirm(msg);
+      }
+
+      if (useCache) {
+        // Reuse cached data: skip extraction
+        setStep("Loading cached analysis...");
         const analysis = await fetchAnalysis({ ...result, depth: 0 });
-        setStep("Analyzing message quality...");
+        // Try cached message quality first; if missing, compute now
+        setStep("Fetching message quality (cached if available)...");
         const messageQuality = await fetchMessageQuality(result);
         if (analysis && messageQuality) {
           setRepoInfo({ ...result, analysis, messageQuality });
@@ -147,12 +191,30 @@ export default function RepoInput() {
         } else {
           setLoading(false);
           setStep("");
-          alert("Failed to classify contributions or fetch message quality.");
+          alert("Failed to load cached analysis or message quality.");
         }
       } else {
-        setLoading(false);
-        setStep("");
-        alert("Failed to extract repository data.");
+        // Full analysis path
+        setStep("Cloning and extracting repository data...");
+        const extractResult = await extractAll({ ...result, depth: 0 });
+        if (extractResult && extractResult.status === "ok") {
+          setStep("Analyzing contributions with AI...");
+          const analysis = await fetchAnalysis({ ...result, depth: 0 });
+          setStep("Analyzing message quality...");
+          const messageQuality = await fetchMessageQuality(result);
+          if (analysis && messageQuality) {
+            setRepoInfo({ ...result, analysis, messageQuality });
+            navigate("/analysis");
+          } else {
+            setLoading(false);
+            setStep("");
+            alert("Failed to classify contributions or fetch message quality.");
+          }
+        } else {
+          setLoading(false);
+          setStep("");
+          alert("Failed to extract repository data.");
+        }
       }
     } else {
       alert("Please enter a valid GitHub repository URL.");
@@ -164,12 +226,22 @@ export default function RepoInput() {
     const result = extractOwnerRepo(url);
     if (result) {
       setLoading(true);
-      setStep("Cloning and extracting repository data...");
-      const extractResult = await extractAll({ ...result, depth: 0 });
-      if (extractResult && extractResult.status === "ok") {
-        setStep("Analyzing contributions with AI...");
+      // Check status and ask to reuse cached data
+      const status = await checkRepoStatus(result);
+      let useCache = false;
+      if (status?.available) {
+        const last = status?.last_updated
+          ? new Date(status.last_updated).toLocaleString()
+          : "unknown date";
+        const msg = status?.stale_hint
+          ? `Saved data found (last update: ${last}). It appears to be old. Use it anyway?`
+          : `Saved data found (last update: ${last}). Do you want to use it to save time?`;
+        useCache = window.confirm(msg);
+      }
+      if (useCache) {
+        setStep("Loading cached analysis...");
         const analysis = await fetchAnalysis({ ...result, depth: 0 });
-        setStep("Analyzing message quality...");
+        setStep("Fetching message quality (cached if available)...");
         const messageQuality = await fetchMessageQuality(result);
         if (analysis && messageQuality) {
           setRepoInfo({ ...result, analysis, messageQuality });
@@ -177,12 +249,29 @@ export default function RepoInput() {
         } else {
           setLoading(false);
           setStep("");
-          alert("Failed to classify contributions or fetch message quality.");
+          alert("Failed to load cached analysis or message quality.");
         }
       } else {
-        setLoading(false);
-        setStep("");
-        alert("Failed to extract repository data.");
+        setStep("Cloning and extracting repository data...");
+        const extractResult = await extractAll({ ...result, depth: 0 });
+        if (extractResult && extractResult.status === "ok") {
+          setStep("Analyzing contributions with AI...");
+          const analysis = await fetchAnalysis({ ...result, depth: 0 });
+          setStep("Analyzing message quality...");
+          const messageQuality = await fetchMessageQuality(result);
+          if (analysis && messageQuality) {
+            setRepoInfo({ ...result, analysis, messageQuality });
+            navigate("/analysis");
+          } else {
+            setLoading(false);
+            setStep("");
+            alert("Failed to classify contributions or fetch message quality.");
+          }
+        } else {
+          setLoading(false);
+          setStep("");
+          alert("Failed to extract repository data.");
+        }
       }
     } else {
       alert("Please enter a valid GitHub repository URL.");
