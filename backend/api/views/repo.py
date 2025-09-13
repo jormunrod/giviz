@@ -31,6 +31,7 @@ MERGED_FILES = (
     "commits_typed.json",
     "issues_typed.json",
     "pulls_typed.json",
+    "contributors_typed.json",
 )
 
 
