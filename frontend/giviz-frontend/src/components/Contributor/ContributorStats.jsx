@@ -7,32 +7,39 @@ export default function ContributorStats({ owner, repo, contributor }) {
 
   useEffect(() => {
     if (!owner || !repo || !contributor) return;
+
+    let mounted = true;
     setLoading(true);
     setError(null);
-    async function fetchStats() {
+
+    (async () => {
       try {
         const API_BASE =
           import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
-        const url = `${API_BASE}/merge/contributor_stats/`;
-        const body = JSON.stringify({ owner, repo, contributor });
-        const res = await fetch(url, {
+        const res = await fetch(`${API_BASE}/merge/contributor_stats/`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body,
+          body: JSON.stringify({ owner, repo, contributor }),
         });
-        const data = await res.json();
-        if (res.ok && data.stats) {
+        const data = await res.json().catch(() => ({}));
+        if (!mounted) return;
+
+        if (res.ok && data?.stats) {
           setStats(data.stats);
         } else {
-          setError(data.error || "No stats available");
+          setError(data?.error || "Unexpected response");
         }
       } catch {
-        setError("Error fetching stats");
+        if (!mounted) return;
+        setError("Network error");
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
-    }
-    fetchStats();
+    })();
+
+    return () => {
+      mounted = false;
+    };
   }, [owner, repo, contributor]);
 
   function QualityBar({ value }) {
@@ -62,9 +69,9 @@ export default function ContributorStats({ owner, repo, contributor }) {
     );
   }
 
-  function renderStats(stats) {
-    if (!stats || typeof stats !== "object") return null;
-    const contributorStats = stats[contributor];
+  function renderStats(statsObj) {
+    if (!statsObj || typeof statsObj !== "object") return null;
+    const contributorStats = statsObj[contributor];
     if (!contributorStats) return <span>No stats for this contributor.</span>;
 
     let totalCommits = 0,
@@ -137,7 +144,6 @@ export default function ContributorStats({ owner, repo, contributor }) {
 
     return (
       <div className="space-y-6">
-        {/* Commits */}
         <div>
           <div className="font-bold text-[13px] mb-1">Commits:</div>
           <div className="ml-4 space-y-1">
@@ -155,7 +161,7 @@ export default function ContributorStats({ owner, repo, contributor }) {
             </div>
           </div>
         </div>
-        {/* Issues */}
+
         <div>
           <div className="font-bold text-[13px] mb-1">Issues:</div>
           <div className="ml-4 space-y-1">
@@ -173,7 +179,7 @@ export default function ContributorStats({ owner, repo, contributor }) {
             </div>
           </div>
         </div>
-        {/* PRs */}
+
         <div>
           <div className="font-bold text-[13px] mb-1">Pull Requests:</div>
           <div className="ml-4 space-y-1">
@@ -195,11 +201,17 @@ export default function ContributorStats({ owner, repo, contributor }) {
     );
   }
 
+  const hasData =
+    !!stats &&
+    typeof stats === "object" &&
+    stats[contributor] &&
+    Object.keys(stats[contributor]).length > 0;
+
   return (
     <div className="text-xs leading-tight text-left">
-      {loading ? (
+      {loading && !hasData ? (
         <span className="text-gray-500">Loading stats...</span>
-      ) : error ? (
+      ) : !loading && !hasData && error ? (
         <span className="text-red-600 font-semibold">{error}</span>
       ) : (
         renderStats(stats)
