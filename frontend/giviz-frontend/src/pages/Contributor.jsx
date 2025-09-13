@@ -17,8 +17,11 @@ export default function Contributor() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (!repoInfo?.owner || !repoInfo?.repo || !username) return;
+
+    let mounted = true;
+
     async function fetchContributor() {
-      if (!repoInfo?.owner || !repoInfo?.repo || !username) return;
       setLoading(true);
       setError(null);
       try {
@@ -26,27 +29,33 @@ export default function Contributor() {
           import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
         const url = `${API_BASE}/contributors/single/?owner=${repoInfo.owner}&repo=${repoInfo.repo}&username=${username}`;
         const res = await fetch(url);
-        const data = await res.json();
-        if (res.ok && data.contributor) {
+        const data = await res.json().catch(() => ({}));
+        if (!mounted) return;
+        if (res.ok && data?.contributor) {
           setContributor(data.contributor);
+          setError(null);
         } else {
-          setError(data.error || "Contributor not found");
+          setContributor(null);
+          setError(data?.error || "Contributor not found");
         }
       } catch {
+        if (!mounted) return;
+        setContributor(null);
         setError("Error fetching contributor data");
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     }
+
     fetchContributor();
-  }, [repoInfo, username]);
+    return () => {
+      mounted = false;
+    };
+  }, [repoInfo?.owner, repoInfo?.repo, username]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] mb-16">
-      <GivizButton
-        className="self-start mb-4"
-        onClick={() => navigate("/analysis")}
-      >
+      <GivizButton className="self-start mb-4" onClick={() => navigate(-1)}>
         ← Back to general analysis
       </GivizButton>
       <Card className="w-full max-w-3xl p-10 flex flex-col items-center">
@@ -65,10 +74,8 @@ export default function Contributor() {
                 }
                 alt={username}
                 className="w-32 h-32 rounded-full border-4 border-blue-200 shadow object-cover bg-white ring-2 ring-blue-400/30 mb-4 md:mb-0 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:ring-4 hover:ring-blue-400/60 avatar-glow"
-                onError={(e) => (e.target.style.display = "none")}
-                style={{
-                  boxShadow: "0 0 0 0 #3b82f6, 0 0 20px 4px #60a5fa33",
-                }}
+                onError={(e) => (e.currentTarget.style.display = "none")}
+                style={{ boxShadow: "0 0 0 0 #3b82f6, 0 0 20px 4px #60a5fa33" }}
               />
             </div>
             <div className="flex flex-col items-center md:items-start w-full">

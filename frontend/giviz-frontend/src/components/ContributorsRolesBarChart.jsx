@@ -34,8 +34,12 @@ export default function ContributorsRolesBarChart({ owner, repo }) {
   );
 
   useEffect(() => {
-    async function fetchEffortData() {
-      setLoading(true);
+    if (!owner || !repo) return;
+
+    let mounted = true;
+    setLoading(true);
+
+    (async () => {
       try {
         const res = await fetch(
           `${API_BASE}/merge/contributors_effort_by_category/`,
@@ -45,16 +49,19 @@ export default function ContributorsRolesBarChart({ owner, repo }) {
             body: JSON.stringify({ owner, repo }),
           }
         );
-        const data = await res.json();
-        const contributors = data.contributors || {};
+        const data = await res.json().catch(() => ({}));
+        if (!mounted) return;
+
+        const contributors = data?.contributors || {};
         const roleMap = {};
         const contributorsArr = [];
+
         Object.entries(contributors).forEach(([username, categories]) => {
           let mainRole = null;
           let maxDedication = -1;
           Object.entries(categories).forEach(([role, vals]) => {
             if (
-              typeof vals.dedication === "number" &&
+              typeof vals?.dedication === "number" &&
               vals.dedication > maxDedication
             ) {
               mainRole = role;
@@ -70,6 +77,7 @@ export default function ContributorsRolesBarChart({ owner, repo }) {
             });
           }
         });
+
         let chartData = Object.entries(roleMap).map(([role, count]) => ({
           role,
           count,
@@ -81,15 +89,19 @@ export default function ContributorsRolesBarChart({ owner, repo }) {
         ) {
           chartData = [{ role: contributorsArr[0].mainRole, count: 1 }];
         }
+
         setRoleCounts(chartData);
         setContributorsList(contributorsArr);
       } catch {
-        setRoleCounts([]);
-        setContributorsList([]);
+        null;
+      } finally {
+        if (mounted) setLoading(false);
       }
-      setLoading(false);
-    }
-    if (owner && repo) fetchEffortData();
+    })();
+
+    return () => {
+      mounted = false;
+    };
   }, [owner, repo]);
 
   const COLORS = [
@@ -120,7 +132,7 @@ export default function ContributorsRolesBarChart({ owner, repo }) {
 
   return (
     <div className="w-full max-w-2xl flex flex-col items-center">
-      {loading ? (
+      {loading && roleCounts.length === 0 ? (
         <div>Loading...</div>
       ) : roleCounts.length === 0 ? (
         <div>No data available.</div>
