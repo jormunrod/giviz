@@ -314,6 +314,16 @@ export default function RepoInput() {
 
   return (
     <Card className="max-w-3xl w-full py-8 p-6">
+      {loading && (
+        <div
+          className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 backdrop-blur-[1px]"
+          aria-busy="true"
+          aria-live="polite"
+          role="status"
+        >
+          <LoadingSpinner text={step || "Extracting repository data..."} />
+        </div>
+      )}
       <GivizModal
         open={confirmOpen}
         title={confirmTitle}
@@ -414,9 +424,8 @@ export default function RepoInput() {
           </div>
         </div>
       </div>
-      {loading && (
-        <LoadingSpinner text={step || "Extracting repository data..."} />
-      )}
+      {/* spacer to avoid layout jump on small screens; keeps card steady */}
+      {!loading && <div className="hidden sm:block h-0" aria-hidden="true" />}
       <p className="text-sm text-givizBlack mb-2">Try these repositories:</p>
       <div className="flex flex-wrap gap-3">
         {examples.map(({ label, url }) => (
