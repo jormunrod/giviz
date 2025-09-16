@@ -16,7 +16,7 @@ const API_BASE =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
 const PAGE_SIZE = 4;
 
-export default function ContributorsRolesBarChart({ owner, repo }) {
+export default function ContributorsRolesBarChart({ owner, repo, contributors }) {
   const [roleCounts, setRoleCounts] = useState([]);
   const [contributorsList, setContributorsList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,66 +34,61 @@ export default function ContributorsRolesBarChart({ owner, repo }) {
   );
 
   useEffect(() => {
-    if (!owner || !repo) return;
+    const buildFromContributors = (contributorsObj) => {
+      const roleMap = {};
+      const contributorsArr = [];
+
+      Object.entries(contributorsObj).forEach(([username, categories]) => {
+        let mainRole = null;
+        let maxDedication = -1;
+        Object.entries(categories).forEach(([role, vals]) => {
+          if (typeof vals?.dedication === "number" && vals.dedication > maxDedication) {
+            mainRole = role;
+            maxDedication = vals.dedication;
+          }
+        });
+        if (mainRole) {
+          roleMap[mainRole] = (roleMap[mainRole] || 0) + 1;
+          contributorsArr.push({ username, mainRole, dedication: maxDedication });
+        }
+      });
+
+      let chartData = Object.entries(roleMap).map(([role, count]) => ({ role, count }));
+      if (contributorsArr.length === 1 && chartData.length === 0 && contributorsArr[0].mainRole) {
+        chartData = [{ role: contributorsArr[0].mainRole, count: 1 }];
+      }
+      setRoleCounts(chartData);
+      setContributorsList(contributorsArr);
+    };
 
     let mounted = true;
+
+    // If contributors are provided via props, use them and skip fetching.
+    if (contributors && typeof contributors === "object") {
+      setLoading(true);
+      buildFromContributors(contributors);
+      if (mounted) setLoading(false);
+      return () => {
+        mounted = false;
+      };
+    }
+
+    if (!owner || !repo) return;
     setLoading(true);
 
     (async () => {
       try {
-        const res = await fetch(
-          `${API_BASE}/merge/contributors_effort_by_category/`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ owner, repo }),
-          }
-        );
+        const res = await fetch(`${API_BASE}/merge/contributors_effort_by_category/`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ owner, repo }),
+        });
         const data = await res.json().catch(() => ({}));
         if (!mounted) return;
-
-        const contributors = data?.contributors || {};
-        const roleMap = {};
-        const contributorsArr = [];
-
-        Object.entries(contributors).forEach(([username, categories]) => {
-          let mainRole = null;
-          let maxDedication = -1;
-          Object.entries(categories).forEach(([role, vals]) => {
-            if (
-              typeof vals?.dedication === "number" &&
-              vals.dedication > maxDedication
-            ) {
-              mainRole = role;
-              maxDedication = vals.dedication;
-            }
-          });
-          if (mainRole) {
-            roleMap[mainRole] = (roleMap[mainRole] || 0) + 1;
-            contributorsArr.push({
-              username,
-              mainRole,
-              dedication: maxDedication,
-            });
-          }
-        });
-
-        let chartData = Object.entries(roleMap).map(([role, count]) => ({
-          role,
-          count,
-        }));
-        if (
-          contributorsArr.length === 1 &&
-          chartData.length === 0 &&
-          contributorsArr[0].mainRole
-        ) {
-          chartData = [{ role: contributorsArr[0].mainRole, count: 1 }];
-        }
-
-        setRoleCounts(chartData);
-        setContributorsList(contributorsArr);
+        const contributorsObj = data?.contributors || {};
+        buildFromContributors(contributorsObj);
       } catch {
-        null;
+        // swallow
       } finally {
         if (mounted) setLoading(false);
       }
@@ -102,7 +97,7 @@ export default function ContributorsRolesBarChart({ owner, repo }) {
     return () => {
       mounted = false;
     };
-  }, [owner, repo]);
+  }, [owner, repo, contributors]);
 
   const COLORS = [
     "#0088FE",

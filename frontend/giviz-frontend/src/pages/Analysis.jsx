@@ -199,6 +199,7 @@ export default function Analysis() {
         <ContributorsRolesBarChart
           owner={repoInfo?.owner}
           repo={repoInfo?.repo}
+          contributors={roleContributors || undefined}
         />
       </Card>
 
