@@ -171,9 +171,10 @@ export default function Analysis() {
       </Card>
       <Card className="mt-8 w-full max-w-2xl flex flex-col items-center">
         <div className="flex items-center mb-4">
-          <h2 className="text-xl font-semibold text-center mr-2">
-            Select a contributor
-          </h2>
+          <h2 className="text-xl font-semibold text-center mr-2">Contributors</h2>
+          <InfoTooltip
+            text={`Browse the contributors detected for this repository. Click any contributor to view their detailed page with roles, activity timeline, and message-quality metrics. Use Previous/Next to navigate pages.`}
+          />
         </div>
         {loadingContrib ? (
           <div className="text-center">Loading contributors...</div>
