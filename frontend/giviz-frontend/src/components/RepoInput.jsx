@@ -100,7 +100,10 @@ export default function RepoInput() {
 
   const examples = [
     { label: "giviz", url: "https://github.com/jormunrod/giviz" },
-    { label: "Rath", url: "https://github.com/rath-team/rath" },
+    {
+      label: "HelloGitWorld",
+      url: "https://github.com/githubtraining/hellogitworld",
+    },
     {
       label: "PetClinic",
       url: "https://github.com/spring-projects/spring-petclinic",
