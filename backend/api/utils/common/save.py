@@ -1,6 +1,8 @@
 import json
 import os
-from typing import Any, Optional
+from datetime import datetime, timezone
+from typing import Any, Optional, Dict
+
 
 from api.utils.common.path import get_repo_data_path
 
@@ -53,3 +55,27 @@ def load_repo_data(
         return None
     with open(file_path, encoding="utf-8") as f:
         return json.load(f)
+
+
+def stat_repo_file(
+    owner: str,
+    repo: str,
+    filename: str,
+    subfolder: Optional[str] = None,
+    base_dir: Optional[str] = None,
+) -> Optional[Dict[str, Any]]:
+    """Return file metadata (exists, size, mtime) or None if not found."""
+    path = get_repo_data_path(owner, repo, subfolder, base_dir=base_dir)
+    file_path = os.path.join(path, filename)
+    try:
+        st = os.stat(file_path)
+        mtime = datetime.fromtimestamp(st.st_mtime, tz=timezone.utc)
+        return {
+            "exists": True,
+            "path": file_path,
+            "size": st.st_size,
+            "mtime_iso": mtime.isoformat(),
+            "mtime_epoch": int(st.st_mtime),
+        }
+    except FileNotFoundError:
+        return None

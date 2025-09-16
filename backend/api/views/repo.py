@@ -1,10 +1,13 @@
+from datetime import datetime, timezone
 import os
+from typing import Dict
 
 import requests
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
 
 from api.serializers.repo import (
     RepoQuerySerializer,
@@ -14,12 +17,22 @@ from api.utils.git.commits import analyze_commits, save_commits
 from api.utils.git.repo import clone_or_update_repo
 from api.utils.github.contributors import fetch_contributors, save_contributors
 from api.utils.github.issues import fetch_issues, save_issues
+
 from api.utils.github.pulls import fetch_pulls, save_pulls
+from api.utils.common.save import stat_repo_file
+from api.serializers.repo_status import RepoStatusSerializer
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 if not GITHUB_TOKEN:
     raise ValueError("GITHUB_TOKEN environment variable is not set")
 GITHUB_API_URL = os.getenv("GITHUB_API_URL", "https://api.github.com/graphql")
+
+MERGED_FILES = (
+    "commits_typed.json",
+    "issues_typed.json",
+    "pulls_typed.json",
+    "contributors_typed.json",
+)
 
 
 @swagger_auto_schema(
@@ -135,3 +148,47 @@ def extract_all_data(request):
     except Exception as e:
         errors["contributors"] = str(e)
     return Response({"status": "ok", "summary": summary, "errors": errors})
+
+
+@swagger_auto_schema(
+    method="post",
+    request_body=RepoQuerySerializer,
+    responses={200: RepoStatusSerializer},
+)
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def repo_status_view(request):
+    body: Dict = request.data or {}
+    owner = body.get("owner")
+    repo = body.get("repo")
+
+    if not owner or not repo:
+        return Response({"error": "owner and repo are required"}, status=400)
+
+    files_info = {}
+    newest_epoch = 0
+
+    for fname in MERGED_FILES:
+        st = stat_repo_file(owner, repo, fname, subfolder="merged")
+        if st:
+            files_info[fname] = st
+            newest_epoch = max(newest_epoch, st["mtime_epoch"])
+        else:
+            files_info[fname] = {"exists": False}
+
+    available = any(v.get("exists") for v in files_info.values())
+    last_updated = (
+        datetime.fromtimestamp(newest_epoch, tz=timezone.utc) if newest_epoch else None
+    )
+
+    now_epoch = int(datetime.now(tz=timezone.utc).timestamp())
+    stale_hint = (now_epoch - newest_epoch) > 24 * 3600 if newest_epoch else True
+
+    data = {
+        "available": available,
+        "last_updated": last_updated,
+        "files": files_info,
+        "stale_hint": stale_hint,
+    }
+    serializer = RepoStatusSerializer(data)
+    return Response(serializer.data)
