@@ -313,10 +313,10 @@ export default function RepoInput() {
   };
 
   return (
-    <Card className="max-w-3xl w-full py-8 p-6">
+    <Card className="max-w-3xl w-full py-8 p-6 mb-12">
       {loading && (
         <div
-          className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 backdrop-blur-[1px]"
+          className="absolute inset-[1px] rounded-2xl z-20 flex items-center justify-center bg-white/70 backdrop-blur-[1px]"
           aria-busy="true"
           aria-live="polite"
           role="status"
