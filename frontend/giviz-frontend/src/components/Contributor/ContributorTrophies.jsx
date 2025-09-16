@@ -103,10 +103,9 @@ export default function ContributorTrophies({ owner, repo, username }) {
   }
 
   return (
-    <div className="w-full flex flex-col items-center mt-4">
-      <div className="flex items-center mb-3">
-        <h3 className="text-lg font-semibold mr-2">Trophies</h3>
-        <span className="text-xs text-gray-500">Top roles in this repo</span>
+    <div className="w-full flex flex-col items-center mt-4 mb-6">
+      <div className="flex justify-center w-full">
+        <span className="font-semibold text-gray-700 mb-4">Trophies</span>
       </div>
       <div className="flex flex-wrap gap-3 justify-center">
         {trophies.map((t) => (
