@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Card from "./Card";
 import TextInput from "./TextInput";
 import GivizButton from "./GivizButton";
 import { useRepo } from "../hooks/useRepo";
 import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "./LoadingSpinner";
+import GivizModal from "./GivizModal";
 
 export default function RepoInput() {
   const API_BASE =
@@ -68,6 +69,30 @@ export default function RepoInput() {
   const [step, setStep] = useState("");
   const { setRepoInfo } = useRepo();
   const navigate = useNavigate();
+
+  // Styled confirmation modal for cache reuse
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmTitle, setConfirmTitle] = useState("");
+  const [confirmMsg, setConfirmMsg] = useState("");
+  const confirmResolveRef = useRef(null);
+
+  const confirmAsync = ({ title, message }) =>
+    new Promise((resolve) => {
+      confirmResolveRef.current = resolve;
+      setConfirmTitle(title || "");
+      setConfirmMsg(message || "");
+      setConfirmOpen(true);
+    });
+  const handleConfirmYes = () => {
+    setConfirmOpen(false);
+    if (confirmResolveRef.current) confirmResolveRef.current(true);
+    confirmResolveRef.current = null;
+  };
+  const handleConfirmNo = () => {
+    setConfirmOpen(false);
+    if (confirmResolveRef.current) confirmResolveRef.current(false);
+    confirmResolveRef.current = null;
+  };
 
   const [maxCommits, setMaxCommits] = useState(30);
   const [maxIssues, setMaxIssues] = useState(30);
@@ -173,14 +198,17 @@ export default function RepoInput() {
           ? new Date(status.last_updated).toLocaleString()
           : "unknown date";
         const msg = status?.stale_hint
-          ? `Saved data found (last update: ${last}). It appears to be old. Use it anyway?`
+          ? `Saved data found (last update: ${last}). It appears to be old. Do you want to use it anyway?`
           : `Saved data found (last update: ${last}). Do you want to use it to save time?`;
-        useCache = window.confirm(msg);
+        useCache = await confirmAsync({
+          title: "Reuse saved data",
+          message: msg,
+        });
       }
 
       if (useCache) {
         // Reuse cached data: skip extraction
-        setStep("Loading cached analysis...");
+        setStep("Loading saved analysis...");
         const analysis = await fetchAnalysis({ ...result, depth: 0 });
         // Try cached message quality first; if missing, compute now
         setStep("Fetching message quality (cached if available)...");
@@ -191,7 +219,7 @@ export default function RepoInput() {
         } else {
           setLoading(false);
           setStep("");
-          alert("Failed to load cached analysis or message quality.");
+          alert("Failed to load saved analysis or message quality.");
         }
       } else {
         // Full analysis path
@@ -217,7 +245,7 @@ export default function RepoInput() {
         }
       }
     } else {
-      alert("Please enter a valid GitHub repository URL.");
+      alert("Please enter a valid GitHub URL.");
     }
   }
 
@@ -234,12 +262,15 @@ export default function RepoInput() {
           ? new Date(status.last_updated).toLocaleString()
           : "unknown date";
         const msg = status?.stale_hint
-          ? `Saved data found (last update: ${last}). It appears to be old. Use it anyway?`
+          ? `Saved data found (last update: ${last}). It appears to be old. Do you want to use it anyway?`
           : `Saved data found (last update: ${last}). Do you want to use it to save time?`;
-        useCache = window.confirm(msg);
+        useCache = await confirmAsync({
+          title: "Reuse saved data",
+          message: msg,
+        });
       }
       if (useCache) {
-        setStep("Loading cached analysis...");
+        setStep("Loading saved analysis...");
         const analysis = await fetchAnalysis({ ...result, depth: 0 });
         setStep("Fetching message quality (cached if available)...");
         const messageQuality = await fetchMessageQuality(result);
@@ -249,7 +280,7 @@ export default function RepoInput() {
         } else {
           setLoading(false);
           setStep("");
-          alert("Failed to load cached analysis or message quality.");
+          alert("Failed to load saved analysis or message quality.");
         }
       } else {
         setStep("Cloning and extracting repository data...");
@@ -274,12 +305,46 @@ export default function RepoInput() {
         }
       }
     } else {
-      alert("Please enter a valid GitHub repository URL.");
+      alert("Please enter a valid GitHub URL.");
     }
   };
 
   return (
     <Card className="max-w-3xl w-full py-8 p-6">
+      <GivizModal
+        open={confirmOpen}
+        title={confirmTitle}
+        message={confirmMsg}
+        onConfirm={handleConfirmYes}
+        onCancel={handleConfirmNo}
+        confirmText={<GivizButton>Use saved data</GivizButton>}
+        cancelText={
+          <GivizButton variant="secondary">Recalculate now</GivizButton>
+        }
+      />
+      <div className="flex items-center gap-3 mb-4">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          className="w-8 h-8 text-givizBlue4"
+          aria-label="GitHub logo"
+        >
+          <path
+            fillRule="evenodd"
+            d="M12 2C6.477 2 2 6.484 2 12.021c0 4.428 2.865 8.184 6.839 9.504.5.092.682-.217.682-.483 0-.237-.009-.868-.014-1.703-2.782.605-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.004.07 1.532 1.032 1.532 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.339-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.025A9.564 9.564 0 0 1 12 6.844c.85.004 1.705.115 2.504.337 1.909-1.295 2.748-1.025 2.748-1.025.546 1.378.202 2.397.1 2.65.64.7 1.028 1.595 1.028 2.688 0 3.847-2.338 4.695-4.566 4.944.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.749 0 .268.18.579.688.481C19.138 20.2 22 16.447 22 12.021 22 6.484 17.523 2 12 2Z"
+            clipRule="evenodd"
+          />
+        </svg>
+        <div>
+          <h2 className="text-xl font-semibold text-givizBlue4 leading-tight">
+            Analyze a repository
+          </h2>
+          <p className="text-xs text-gray-500">
+            Paste the GitHub repository URL and we'll show you the analysis.
+          </p>
+        </div>
+      </div>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 mb-4">
         <div className="flex items-center gap-4">
           <TextInput
@@ -293,7 +358,7 @@ export default function RepoInput() {
             className="px-6 py-2 text-sm"
             disabled={loading}
           >
-            {loading ? "Extracting..." : "Go!"}
+            {loading ? "Processing..." : "Analyze"}
           </GivizButton>
         </div>
       </form>
@@ -301,7 +366,7 @@ export default function RepoInput() {
       <div className="mb-4">
         <div className="bg-yellow-50 border border-yellow-300 rounded p-4 flex flex-col gap-2">
           <div className="text-xs text-yellow-800 font-semibold mb-1">
-            Development only: Extraction limits (will be removed in production)
+            Development only: extraction limits (will be removed in production)
           </div>
           <div className="flex flex-wrap gap-4 items-center">
             <div className="flex flex-col items-start">
@@ -349,9 +414,7 @@ export default function RepoInput() {
       {loading && (
         <LoadingSpinner text={step || "Extracting repository data..."} />
       )}
-      <p className="text-sm text-givizBlack mb-2">
-        Try these example repositories:
-      </p>
+      <p className="text-sm text-givizBlack mb-2">Try these repositories:</p>
       <div className="flex flex-wrap gap-3">
         {examples.map(({ label, url }) => (
           <GivizButton
