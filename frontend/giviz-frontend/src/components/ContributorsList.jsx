@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import GivizButton from "./GivizButton";
 
 export default function ContributorsList({
   contributors = [],
@@ -43,24 +44,26 @@ export default function ContributorsList({
         ))}
       </ul>
       {totalPages > 1 && (
-        <div className="flex justify-center mt-6 space-x-2">
-          <button
-            className="px-4 py-2 bg-blue-100 text-blue-700 font-semibold rounded shadow hover:bg-blue-200 transition disabled:opacity-50"
+        <div className="flex justify-center items-center gap-2 mt-4">
+          <GivizButton
+            variant="secondary"
+            className="px-2 py-1"
             onClick={() => setPage((p) => Math.max(0, p - 1))}
             disabled={page === 0}
           >
             Previous
-          </button>
-          <span className="px-2 text-gray-700 font-medium">
+          </GivizButton>
+          <span className="text-xs text-gray-600">
             Page {page + 1} of {totalPages}
           </span>
-          <button
-            className="px-4 py-2 bg-blue-100 text-blue-700 font-semibold rounded shadow hover:bg-blue-200 transition disabled:opacity-50"
+          <GivizButton
+            variant="secondary"
+            className="px-2 py-1"
             onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
             disabled={page === totalPages - 1}
           >
             Next
-          </button>
+          </GivizButton>
         </div>
       )}
     </div>
