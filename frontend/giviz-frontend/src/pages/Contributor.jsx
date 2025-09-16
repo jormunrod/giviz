@@ -7,6 +7,7 @@ import ContributorRolesPieChart from "../components/Contributor/ContributorRoles
 import ContributorSummary from "../components/Contributor/ContributorSummary";
 import ContributorStats from "../components/Contributor/ContributorStats";
 import ContributorTimelineChart from "../components/Contributor/ContributorTimelineChart";
+import ContributorTrophies from "../components/Contributor/ContributorTrophies";
 
 export default function Contributor() {
   const { username } = useParams();
@@ -64,72 +65,83 @@ export default function Contributor() {
         ) : error ? (
           <span className="text-red-600 font-semibold">{error}</span>
         ) : (
-          <div className="flex flex-col md:flex-row items-center mb-8 w-full gap-8">
-            <div className="flex-shrink-0 flex items-center justify-center w-full md:w-auto">
-              <img
-                src={
-                  contributor?.avatar_url ||
-                  contributor?.avatar ||
-                  `https://github.com/${username}.png`
-                }
-                alt={username}
-                className="w-32 h-32 rounded-full border-4 border-blue-200 shadow object-cover bg-white ring-2 ring-blue-400/30 mb-4 md:mb-0 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:ring-4 hover:ring-blue-400/60 avatar-glow"
-                onError={(e) => (e.currentTarget.style.display = "none")}
-                style={{ boxShadow: "0 0 0 0 #3b82f6, 0 0 20px 4px #60a5fa33" }}
-              />
-            </div>
-            <div className="flex flex-col items-center md:items-start w-full">
-              <span className="font-bold text-2xl text-gray-800 mb-1">
-                {contributor?.login || contributor?.username || username}
-              </span>
-              {contributor?.name && contributor?.name !== username && (
-                <span className="text-gray-500 text-lg mb-1">
-                  {contributor.name}
+          <>
+            <div className="flex flex-col md:flex-row items-center mb-4 w-full gap-8">
+              <div className="flex-shrink-0 flex items-center justify-center w-full md:w-auto">
+                <img
+                  src={
+                    contributor?.avatar_url ||
+                    contributor?.avatar ||
+                    `https://github.com/${username}.png`
+                  }
+                  alt={username}
+                  className="w-32 h-32 rounded-full border-4 border-blue-200 shadow object-cover bg-white ring-2 ring-blue-400/30 mb-4 md:mb-0 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:ring-4 hover:ring-blue-400/60 avatar-glow"
+                  onError={(e) => (e.currentTarget.style.display = "none")}
+                  style={{
+                    boxShadow: "0 0 0 0 #3b82f6, 0 0 20px 4px #60a5fa33",
+                  }}
+                />
+              </div>
+              <div className="flex flex-col items-center md:items-start w-full">
+                <span className="font-bold text-2xl text-gray-800 mb-1">
+                  {contributor?.login || contributor?.username || username}
                 </span>
-              )}
-              {contributor?.bio && (
-                <span className="text-gray-600 text-base text-center md:text-left mt-2">
-                  {contributor.bio}
-                </span>
-              )}
-              <div className="flex flex-col items-center md:items-start mt-4 space-y-1 w-full">
-                {contributor?.company && (
-                  <span className="text-gray-700 text-base">
-                    <b>Company:</b> {contributor.company}
+                {contributor?.name && contributor?.name !== username && (
+                  <span className="text-gray-500 text-lg mb-1">
+                    {contributor.name}
                   </span>
                 )}
-                {contributor?.location && (
-                  <span className="text-gray-700 text-base">
-                    <b>Location:</b> {contributor.location}
+                {contributor?.bio && (
+                  <span className="text-gray-600 text-base text-center md:text-left mt-2">
+                    {contributor.bio}
                   </span>
                 )}
-                {contributor?.email && (
-                  <span className="text-gray-700 text-base">
-                    <b>Email:</b> {contributor.email}
-                  </span>
-                )}
-                {contributor?.url && (
-                  <span className="text-gray-700 text-base">
-                    <b>GitHub:</b>{" "}
-                    <a
-                      href={contributor.url}
-                      className="text-blue-600 underline"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {contributor.url}
-                    </a>
-                  </span>
-                )}
-                {contributor?.createdAt && (
-                  <span className="text-gray-700 text-base">
-                    <b>Joined:</b>{" "}
-                    {new Date(contributor.createdAt).toLocaleDateString()}
-                  </span>
-                )}
+                <div className="flex flex-col items-center md:items-start mt-4 space-y-1 w-full">
+                  {contributor?.company && (
+                    <span className="text-gray-700 text-base">
+                      <b>Company:</b> {contributor.company}
+                    </span>
+                  )}
+                  {contributor?.location && (
+                    <span className="text-gray-700 text-base">
+                      <b>Location:</b> {contributor.location}
+                    </span>
+                  )}
+                  {contributor?.email && (
+                    <span className="text-gray-700 text-base">
+                      <b>Email:</b> {contributor.email}
+                    </span>
+                  )}
+                  {contributor?.url && (
+                    <span className="text-gray-700 text-base">
+                      <b>GitHub:</b>{" "}
+                      <a
+                        href={contributor.url}
+                        className="text-blue-600 underline"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {contributor.url}
+                      </a>
+                    </span>
+                  )}
+                  {contributor?.createdAt && (
+                    <span className="text-gray-700 text-base">
+                      <b>Joined:</b>{" "}
+                      {new Date(contributor.createdAt).toLocaleDateString()}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+            {repoInfo?.owner && repoInfo?.repo && username && (
+              <ContributorTrophies
+                owner={repoInfo.owner}
+                repo={repoInfo.repo}
+                username={username}
+              />
+            )}
+          </>
         )}
         <div className="flex justify-center w-full">
           <span className="font-semibold text-gray-700 mb-4">

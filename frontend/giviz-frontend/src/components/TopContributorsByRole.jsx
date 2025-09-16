@@ -32,7 +32,7 @@ function getTopContributorsByRole(contributorsData, roleKey, topN = 3) {
   return result.sort((a, b) => b.total - a.total).slice(0, topN);
 }
 
-function Medal({ place = 0, size = 44, className = "", noRibbon = false }) {
+export function Medal({ place = 0, size = 44, className = "", noRibbon = false }) {
   const palette = [
     {
       // Gold
