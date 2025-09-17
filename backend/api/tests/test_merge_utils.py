@@ -1,6 +1,5 @@
 import json
 import os
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -246,10 +245,7 @@ def test_save_repo_data_handles_remove_error(monkeypatch, tmp_path):
 
 
 def test_stat_repo_file_missing(tmp_path):
-    assert (
-        stat_repo_file("org", "proj", "missing.json", base_dir=str(tmp_path))
-        is None
-    )
+    assert stat_repo_file("org", "proj", "missing.json", base_dir=str(tmp_path)) is None
 
 
 def test_load_repo_data_raises_after_retries(tmp_path):
