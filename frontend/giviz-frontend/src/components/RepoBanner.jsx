@@ -31,6 +31,36 @@ const LANGUAGE_COLORS = {
   "Jupyter Notebook": "#DA5B0B",
 };
 
+const LANGUAGE_ICON_PATHS = {
+  JavaScript: "javascript/javascript-original.svg",
+  TypeScript: "typescript/typescript-original.svg",
+  Python: "python/python-original.svg",
+  Java: "java/java-original.svg",
+  "C++": "cplusplus/cplusplus-original.svg",
+  "C#": "csharp/csharp-original.svg",
+  C: "c/c-original.svg",
+  Go: "go/go-original.svg",
+  Ruby: "ruby/ruby-original.svg",
+  PHP: "php/php-original.svg",
+  Swift: "swift/swift-original.svg",
+  Kotlin: "kotlin/kotlin-original.svg",
+  Rust: "rust/rust-plain.svg",
+  Dart: "dart/dart-original.svg",
+  Haskell: "haskell/haskell-original.svg",
+  Shell: "bash/bash-original.svg",
+  HTML: "html5/html5-original.svg",
+  CSS: "css3/css3-original.svg",
+  Vue: "vuejs/vuejs-original.svg",
+  "Objective-C": "objectivec/objectivec-plain.svg",
+  Elixir: "elixir/elixir-original.svg",
+  Erlang: "erlang/erlang-original.svg",
+  Perl: "perl/perl-original.svg",
+  PowerShell: "powershell/powershell-original.svg",
+  MATLAB: "matlab/matlab-original.svg",
+  R: "r/r-original.svg",
+  "Jupyter Notebook": "jupyter/jupyter-original.svg",
+};
+
 export default function RepoBanner({ owner, repo }) {
   const [meta, setMeta] = useState(null);
   const [languages, setLanguages] = useState([]);
@@ -196,7 +226,7 @@ export default function RepoBanner({ owner, repo }) {
                   className="inline-flex items-center gap-2 rounded-full border border-black/10 px-3 py-1 font-medium"
                   title={`${name} • ${sizeLabel}`}
                 >
-                  <LanguageBadge color={color} />
+                  <LanguageBadge color={color} name={name} />
                   <span>{name}</span>
                   <span className="text-givizBlack/60">{percentLabel}</span>
                 </span>
@@ -352,32 +382,47 @@ function GithubGlyph({ className = "w-8 h-8" }) {
   );
 }
 
-function LanguageBadge({ color }) {
+function LanguageBadge({ color, name }) {
+  const iconPath = LANGUAGE_ICON_PATHS[name];
+  const iconUrl = iconPath
+    ? `https://cdn.jsdelivr.net/gh/devicons/devicon/icons/${iconPath}`
+    : null;
+  const [failed, setFailed] = useState(false);
   return (
     <span
-      className="flex h-5 w-5 items-center justify-center rounded-full text-white shadow-inner"
-      style={{ backgroundColor: color }}
+      className="flex h-6 w-6 items-center justify-center rounded-full border bg-white shadow-sm"
+      style={{ borderColor: color }}
     >
-      <LanguageIcon className="h-3 w-3 text-white/90" />
+      {iconUrl && !failed ? (
+        <img
+          src={iconUrl}
+          alt={`${name} logo`}
+          className="h-4 w-4"
+          loading="lazy"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <CodeIcon className="h-3.5 w-3.5 text-givizBlack/50" />
+      )}
     </span>
   );
 }
 
-function LanguageIcon({ className = "w-3 h-3" }) {
+function CodeIcon({ className = "w-3 h-3" }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth={2.2}
+      strokeWidth={2.1}
       strokeLinecap="round"
       strokeLinejoin="round"
       className={className}
       aria-hidden="true"
     >
-      <path d="M8 7 4 12l4 5" />
-      <path d="m16 7 4 5-4 5" />
+      <path d="M7 7 3 12l4 5" />
+      <path d="m17 7 4 5-4 5" />
       <path d="m14 4-4 16" />
     </svg>
   );
