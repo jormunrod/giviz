@@ -132,7 +132,14 @@ def test_analyze_message_quality_view(monkeypatch):
     client = APIClient()
     response = client.post(
         "/api/analysis/analyze_message_quality/",
-        {"owner": "org", "repo": "proj", "type": "all"},
+        {
+            "owner": "org",
+            "repo": "proj",
+            "type": "all",
+            "max_commits": 5,
+            "max_issues": 5,
+            "max_pulls": 5,
+        },
         format="json",
     )
 
@@ -237,3 +244,179 @@ def test_classify_and_save_contributions_handles_exception(monkeypatch):
     assert classified is None
     assert code == 500
     assert error["error"] == "AI classification failed"
+
+
+@pytest.mark.django_db
+def test_classify_contributions_invalid_payload():
+    client = APIClient()
+    response = client.post(
+        "/api/analysis/classify_contributions/",
+        {},
+        format="json",
+    )
+
+    assert response.status_code == 400
+
+
+@pytest.mark.django_db
+def test_classify_contributions_percentages_invalid_payload():
+    client = APIClient()
+    response = client.post(
+        "/api/analysis/classify_contributions_percentages/",
+        {},
+        format="json",
+    )
+
+    assert response.status_code == 400
+
+
+@pytest.mark.django_db
+def test_classify_contributions_percentages_propagates_error(monkeypatch):
+    def fake_load(owner, repo, filename, subfolder=None):
+        if filename == "contributions_classified.json" and subfolder == "ai":
+            return []
+        return []
+
+    def fake_classify(owner, repo):
+        return None, {"error": "failed"}, 503
+
+    monkeypatch.setattr(analysis_view, "load_repo_data", fake_load)
+    monkeypatch.setattr(analysis_view, "classify_and_save_contributions", fake_classify)
+
+    client = APIClient()
+    response = client.post(
+        "/api/analysis/classify_contributions_percentages/",
+        {"owner": "org", "repo": "proj"},
+        format="json",
+    )
+
+    assert response.status_code == 503
+    assert response.json()["error"] == "failed"
+
+
+@pytest.mark.django_db
+def test_classify_contributions_percentages_no_data_after_classification(monkeypatch):
+    def fake_load(owner, repo, filename, subfolder=None):
+        if filename == "contributions_classified.json" and subfolder == "ai":
+            return []
+        if filename == "commits.json":
+            return []
+        return []
+
+    def fake_classify(owner, repo):
+        return [], None, 200
+
+    monkeypatch.setattr(analysis_view, "load_repo_data", fake_load)
+    monkeypatch.setattr(analysis_view, "classify_and_save_contributions", fake_classify)
+
+    client = APIClient()
+    response = client.post(
+        "/api/analysis/classify_contributions_percentages/",
+        {"owner": "org", "repo": "proj"},
+        format="json",
+    )
+
+    assert response.status_code == 500
+    assert "No classified data" in response.json()["error"]
+
+
+@pytest.mark.django_db
+def test_classify_contributions_percentages_no_effort(monkeypatch):
+    classified = [{"type": "commit", "hash": "h1", "category": "dev"}]
+    commits_raw = [{"hash": "h1", "insertions": 0, "deletions": 0}]
+
+    def fake_load(owner, repo, filename, subfolder=None):
+        if filename == "contributions_classified.json" and subfolder == "ai":
+            return classified
+        if filename == "commits.json":
+            return commits_raw
+        return []
+
+    monkeypatch.setattr(analysis_view, "load_repo_data", fake_load)
+
+    client = APIClient()
+    response = client.post(
+        "/api/analysis/classify_contributions_percentages/",
+        {"owner": "org", "repo": "proj"},
+        format="json",
+    )
+
+    assert response.status_code == 500
+    assert response.json()["error"] == "No effort data found."
+
+
+@pytest.mark.django_db
+def test_analyze_message_quality_invalid_payload():
+    client = APIClient()
+    response = client.post(
+        "/api/analysis/analyze_message_quality/",
+        {},
+        format="json",
+    )
+
+    assert response.status_code == 400
+
+
+@pytest.mark.django_db
+def test_analyze_message_quality_respects_max_limits(monkeypatch):
+    stored = {}
+
+    def fake_load(owner, repo, filename, subfolder=None):
+        if filename == "commits.json":
+            return [
+                {"hash": "h1", "message": "A"},
+                {"hash": "h2", "message": "B"},
+            ]
+        if filename == "issues.json":
+            return [
+                {"number": 1, "title": "Issue1", "body": "Body1"},
+                {"number": 2, "title": "Issue2", "body": "Body2"},
+            ]
+        if filename == "pulls.json":
+            return [
+                {"number": 10, "title": "PR1", "body": "Desc1"},
+                {"number": 11, "title": "PR2", "body": "Desc2"},
+            ]
+        return []
+
+    def fake_analyze(messages):
+        stored["messages"] = messages
+        return [{"id": item["id"], "score": 1} for item in messages]
+
+    def fake_save(owner, repo, data, filename, subfolder=None):
+        stored["filename"] = filename
+        stored["data"] = data
+
+    monkeypatch.setattr(analysis_view, "load_repo_data", fake_load)
+    monkeypatch.setattr(analysis_view, "analyze_all_message_quality", fake_analyze)
+    monkeypatch.setattr(analysis_view, "save_repo_data", fake_save)
+
+    client = APIClient()
+    response = client.post(
+        "/api/analysis/analyze_message_quality/",
+        {
+            "owner": "org",
+            "repo": "proj",
+            "type": "all",
+            "max_commits": 1,
+            "max_issues": 1,
+            "max_pulls": 1,
+        },
+        format="json",
+    )
+
+    assert response.status_code == 200
+    assert len(stored["messages"]) == 3
+    assert stored["filename"] == "message_quality.json"
+
+
+@pytest.mark.django_db
+def test_summarize_contributor_activity_invalid_payload():
+    client = APIClient()
+    response = client.post(
+        "/api/analysis/summarize_contributor_activity/",
+        {},
+        format="json",
+    )
+
+    assert response.status_code == 400

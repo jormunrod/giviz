@@ -250,3 +250,13 @@ def test_stat_repo_file_missing(tmp_path):
         stat_repo_file("org", "proj", "missing.json", base_dir=str(tmp_path))
         is None
     )
+
+
+def test_load_repo_data_raises_after_retries(tmp_path):
+    base_dir = tmp_path / "data"
+    save_repo_data("org", "proj", {"ok": True}, "data.json", base_dir=str(base_dir))
+    file_path = base_dir / "org__proj" / "data.json"
+    file_path.write_text("{invalid", encoding="utf-8")
+
+    with pytest.raises(json.JSONDecodeError):
+        load_repo_data("org", "proj", "data.json", base_dir=str(base_dir))

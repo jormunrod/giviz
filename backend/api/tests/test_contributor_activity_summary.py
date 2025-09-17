@@ -12,6 +12,15 @@ def test_get_contributor_info_from_list(monkeypatch):
     assert info == contributors[0]
 
 
+def test_get_contributor_info_returns_empty_when_missing(monkeypatch):
+    contributors = [{"login": "bob", "name": "Bob"}]
+    monkeypatch.setattr(summary, "load_repo_data", lambda *_args, **_kwargs: contributors)
+
+    info = summary.get_contributor_info("org", "proj", "alice")
+
+    assert info == {}
+
+
 def test_get_contributor_info_from_dict(monkeypatch):
     contributors = {"alice": {"login": "alice", "name": "Alice"}}
     monkeypatch.setattr(summary, "load_repo_data", lambda *_args, **_kwargs: contributors)

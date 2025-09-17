@@ -43,6 +43,22 @@ def test_analyze_message_quality_with_ai_sanitizes_response(monkeypatch):
     assert result == [{"id": 2, "score": 5}]
 
 
+def test_analyze_message_quality_with_ai_handles_unparsable_content(monkeypatch):
+    def fake_create(*_args, **_kwargs):
+        return DummyResponse("unparsable")
+
+    dummy_client = SimpleNamespace(
+        chat=SimpleNamespace(completions=SimpleNamespace(create=fake_create))
+    )
+    monkeypatch.setattr(mq, "client", dummy_client)
+
+    result = mq.analyze_message_quality_with_ai(
+        [{"id": 3, "type": "pr", "text": "Ok"}],
+    )
+
+    assert result == []
+
+
 def test_analyze_all_message_quality_batches(monkeypatch):
     calls = []
 
