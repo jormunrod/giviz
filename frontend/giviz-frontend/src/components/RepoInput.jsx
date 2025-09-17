@@ -11,6 +11,22 @@ export default function RepoInput() {
   const API_BASE =
     import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
 
+  const parseEnvLimit = (value, fallback) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+  };
+
+  const showDevLimitsBox =
+    String(import.meta.env.VITE_SHOW_DEV_LIMITS_BOX ?? "true").toLowerCase() !==
+    "false";
+
+  const maxCommitsDefault = parseEnvLimit(
+    import.meta.env.VITE_MAX_COMMITS,
+    30
+  );
+  const maxIssuesDefault = parseEnvLimit(import.meta.env.VITE_MAX_ISSUES, 30);
+  const maxPullsDefault = parseEnvLimit(import.meta.env.VITE_MAX_PULLS, 30);
+
   const checkRepoStatus = async ({ owner, repo }) => {
     try {
       const res = await fetch(`${API_BASE}/repo/status/`, {
@@ -94,9 +110,9 @@ export default function RepoInput() {
     confirmResolveRef.current = null;
   };
 
-  const [maxCommits, setMaxCommits] = useState(30);
-  const [maxIssues, setMaxIssues] = useState(30);
-  const [maxPulls, setMaxPulls] = useState(30);
+  const [maxCommits, setMaxCommits] = useState(() => maxCommitsDefault);
+  const [maxIssues, setMaxIssues] = useState(() => maxIssuesDefault);
+  const [maxPulls, setMaxPulls] = useState(() => maxPullsDefault);
 
   const examples = [
     { label: "giviz", url: "https://github.com/jormunrod/giviz" },
@@ -375,55 +391,56 @@ export default function RepoInput() {
           </GivizButton>
         </div>
       </form>
-      {/* DEV LIMITS BOX - REMOVE IN PRODUCTION */}
-      <div className="mb-4">
-        <div className="bg-yellow-50 border border-yellow-300 rounded p-4 flex flex-col gap-2">
-          <div className="text-xs text-yellow-800 font-semibold mb-1">
-            Development only: extraction limits (will be removed in production)
-          </div>
-          <div className="flex flex-wrap gap-4 items-center">
-            <div className="flex flex-col items-start">
-              <label className="text-xs font-medium mb-1" htmlFor="max-commits">
-                Max commits
-              </label>
-              <input
-                id="max-commits"
-                type="number"
-                min={1}
-                value={maxCommits}
-                onChange={(e) => setMaxCommits(Number(e.target.value))}
-                className="w-20 border rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-givizPurple"
-              />
+      {showDevLimitsBox && (
+        <div className="mb-4">
+          <div className="bg-yellow-50 border border-yellow-300 rounded p-4 flex flex-col gap-2">
+            <div className="text-xs text-yellow-800 font-semibold mb-1">
+              Development only: extraction limits (will be removed in production)
             </div>
-            <div className="flex flex-col items-start">
-              <label className="text-xs font-medium mb-1" htmlFor="max-issues">
-                Max issues
-              </label>
-              <input
-                id="max-issues"
-                type="number"
-                min={1}
-                value={maxIssues}
-                onChange={(e) => setMaxIssues(Number(e.target.value))}
-                className="w-20 border rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-givizPurple"
-              />
-            </div>
-            <div className="flex flex-col items-start">
-              <label className="text-xs font-medium mb-1" htmlFor="max-pulls">
-                Max PRs
-              </label>
-              <input
-                id="max-pulls"
-                type="number"
-                min={1}
-                value={maxPulls}
-                onChange={(e) => setMaxPulls(Number(e.target.value))}
-                className="w-20 border rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-givizPurple"
-              />
+            <div className="flex flex-wrap gap-4 items-center">
+              <div className="flex flex-col items-start">
+                <label className="text-xs font-medium mb-1" htmlFor="max-commits">
+                  Max commits
+                </label>
+                <input
+                  id="max-commits"
+                  type="number"
+                  min={1}
+                  value={maxCommits}
+                  onChange={(e) => setMaxCommits(Number(e.target.value))}
+                  className="w-20 border rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-givizPurple"
+                />
+              </div>
+              <div className="flex flex-col items-start">
+                <label className="text-xs font-medium mb-1" htmlFor="max-issues">
+                  Max issues
+                </label>
+                <input
+                  id="max-issues"
+                  type="number"
+                  min={1}
+                  value={maxIssues}
+                  onChange={(e) => setMaxIssues(Number(e.target.value))}
+                  className="w-20 border rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-givizPurple"
+                />
+              </div>
+              <div className="flex flex-col items-start">
+                <label className="text-xs font-medium mb-1" htmlFor="max-pulls">
+                  Max PRs
+                </label>
+                <input
+                  id="max-pulls"
+                  type="number"
+                  min={1}
+                  value={maxPulls}
+                  onChange={(e) => setMaxPulls(Number(e.target.value))}
+                  className="w-20 border rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-givizPurple"
+                />
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
       {/* spacer to avoid layout jump on small screens; keeps card steady */}
       {!loading && <div className="hidden sm:block h-0" aria-hidden="true" />}
       <p className="text-sm text-givizBlack mb-2">Try these repositories:</p>
