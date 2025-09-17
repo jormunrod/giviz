@@ -1,9 +1,12 @@
 import json
+import os
+import tempfile
 from pathlib import Path
 
 import pytest
 
 from api.utils.common import merge
+from api.utils.common import save as save_module
 from api.utils.common.save import load_repo_data, save_repo_data, stat_repo_file
 
 
@@ -14,6 +17,8 @@ def test_merge_contributions_with_quality_fallback(monkeypatch):
         {"type": "commit", "hash": "c1", "category": "feature"},
         {"type": "issue", "number": 42, "category": "bug"},
         {"type": "pull", "number": 7, "category": "chore"},
+        {"type": "contributor", "login": "alice", "category": "maintainer"},
+        {"type": "ignored", "hash": "noop"},
     ]
 
     message_quality = [
@@ -67,9 +72,47 @@ def test_merge_contributions_with_quality_fallback(monkeypatch):
     assert pulls[0]["score"] == 0.5
     assert pulls[0]["suggestions"] == []
 
-    # contributor list carried over even without classification
-    assert contributors[0]["type"] is None
-    assert contributors[0]["category"] is None
+    assert contributors[0]["type"] == "contributor"
+    assert contributors[0]["category"] == "maintainer"
+
+
+def test_merge_contributions_missing_quality_and_files(monkeypatch):
+    owner, repo = "org", "proj"
+
+    classified = [{"type": "commit", "hash": "c1", "category": "feature"}]
+
+    data_by_file = {
+        (None, "contributions_classified.json", "ai"): classified,
+        (None, "message_quality.json", "ai"): None,
+        (None, "message_quality_commit.json", "ai"): None,
+        (None, "message_quality_issue.json", "ai"): None,
+        (None, "message_quality_pr.json", "ai"): None,
+        (None, "commits.json", None): [{"hash": "c1", "author": "Alice"}],
+        (None, "contributors.json", None): None,
+        (None, "issues.json", None): None,
+        (None, "pulls.json", None): None,
+    }
+
+    saved = {}
+
+    def fake_load(owner_arg, repo_arg, filename, subfolder=None, base_dir=None):
+        assert (owner_arg, repo_arg) == (owner, repo)
+        return data_by_file.get((None, filename, subfolder))
+
+    def fake_save(owner_arg, repo_arg, data, filename, subfolder=None, base_dir=None):
+        assert (owner_arg, repo_arg) == (owner, repo)
+        saved[(subfolder, filename)] = data
+
+    monkeypatch.setattr(merge, "load_repo_data", fake_load)
+    monkeypatch.setattr(merge, "save_repo_data", fake_save)
+
+    merge.merge_contributions(owner, repo)
+
+    commits = saved[("merged", "commits_typed.json")]
+    assert commits[0]["type"] == "commit"
+    assert commits[0]["category"] == "feature"
+    assert commits[0]["score"] is None
+    assert commits[0]["suggestions"] is None
 
 
 def test_merge_contributions_requires_classified_file(monkeypatch):
@@ -154,3 +197,56 @@ def test_save_and_load_repo_data_roundtrip(tmp_path):
 
 def test_load_repo_data_returns_none_when_missing(tmp_path):
     assert load_repo_data("org", "proj", "missing.json", base_dir=str(tmp_path)) is None
+
+
+def test_save_repo_data_cleans_tmp_on_failure(monkeypatch, tmp_path):
+    created = {}
+    real_mkstemp = save_module.tempfile.mkstemp
+
+    def fake_mkstemp(prefix, dir=None, text=True):
+        fd, path = real_mkstemp(prefix=prefix, dir=dir, text=text)
+        created["path"] = path
+        return fd, path
+
+    def fail_replace(_src, _dst):
+        raise ValueError("boom")
+
+    monkeypatch.setattr(save_module.tempfile, "mkstemp", fake_mkstemp)
+    monkeypatch.setattr(save_module.os, "replace", fail_replace)
+
+    with pytest.raises(ValueError):
+        save_repo_data("org", "proj", {"k": "v"}, "data.json", base_dir=str(tmp_path))
+
+    assert not os.path.exists(created["path"])
+
+
+def test_save_repo_data_handles_remove_error(monkeypatch, tmp_path):
+    created = {}
+    real_mkstemp = save_module.tempfile.mkstemp
+
+    def fake_mkstemp(prefix, dir=None, text=True):
+        fd, path = real_mkstemp(prefix=prefix, dir=dir, text=text)
+        created["path"] = path
+        return fd, path
+
+    def fail_replace(_src, _dst):
+        raise ValueError("boom")
+
+    def fail_remove(path):
+        raise OSError("cannot remove")
+
+    monkeypatch.setattr(save_module.tempfile, "mkstemp", fake_mkstemp)
+    monkeypatch.setattr(save_module.os, "replace", fail_replace)
+    monkeypatch.setattr(save_module.os, "remove", fail_remove)
+
+    with pytest.raises(ValueError):
+        save_repo_data("org", "proj", {"k": "v"}, "data.json", base_dir=str(tmp_path))
+
+    assert os.path.exists(created["path"])
+
+
+def test_stat_repo_file_missing(tmp_path):
+    assert (
+        stat_repo_file("org", "proj", "missing.json", base_dir=str(tmp_path))
+        is None
+    )
