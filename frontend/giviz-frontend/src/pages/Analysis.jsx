@@ -141,27 +141,6 @@ export default function Analysis() {
       <Card className="mt-8 w-full max-w-2xl flex flex-col items-center">
         <div className="flex items-center mb-4">
           <h2 className="text-xl font-semibold text-center mr-2">
-            Contributors
-          </h2>
-          <InfoTooltip
-            text={`Browse the contributors detected for this repository. Click any contributor to view their detailed page with roles, activity timeline, and message-quality metrics.`}
-          />
-        </div>
-        {loadingContrib ? (
-          <div className="text-center">Loading contributors...</div>
-        ) : contributors.length > 0 ? (
-          <ContributorsList
-            contributors={contributors}
-            onSelect={handleSelectContributor}
-            pageSize={10}
-          />
-        ) : (
-          <div className="text-center">No contributors for this repo.</div>
-        )}
-      </Card>
-      <Card className="mt-8 w-full max-w-2xl flex flex-col items-center">
-        <div className="flex items-center mb-4">
-          <h2 className="text-xl font-semibold text-center mr-2">
             Collaborative Roles
           </h2>
           <InfoTooltip
@@ -212,6 +191,27 @@ export default function Analysis() {
           <div className="text-center text-gray-400">
             No contributor data available for top roles.
           </div>
+        )}
+      </Card>
+      <Card className="mt-8 w-full max-w-2xl flex flex-col items-center">
+        <div className="flex items-center mb-4">
+          <h2 className="text-xl font-semibold text-center mr-2">
+            Contributors
+          </h2>
+          <InfoTooltip
+            text={`Browse the contributors detected for this repository. Click any contributor to view their detailed page with roles, activity timeline, and message-quality metrics.`}
+          />
+        </div>
+        {loadingContrib ? (
+          <div className="text-center">Loading contributors...</div>
+        ) : contributors.length > 0 ? (
+          <ContributorsList
+            contributors={contributors}
+            onSelect={handleSelectContributor}
+            pageSize={10}
+          />
+        ) : (
+          <div className="text-center">No contributors for this repo.</div>
         )}
       </Card>
     </div>
