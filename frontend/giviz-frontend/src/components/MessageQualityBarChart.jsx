@@ -67,22 +67,27 @@ export default function MessageQualityBarChart({
   return (
     <div className="w-full flex flex-col items-center justify-center transition-all duration-500 pt-8 pb-4">
       <div className="flex gap-2 mb-4">
-        {Object.entries(CATEGORY_LABELS).map(([type, label]) => (
-          <GivizButton
-            key={type}
-            className={`mb-4 ${
-              selectedType === type
-                ? "bg-givizPurple text-white"
-                : "bg-blue-300 text-givizPurple border border-givizPurple"
-            }`}
-            onClick={() => {
-              setSelectedType(type);
-              setSuggestionsPage(0);
-            }}
-          >
-            {label}
-          </GivizButton>
-        ))}
+        {Object.entries(CATEGORY_LABELS).map(([type, label]) => {
+          const isSelected = selectedType === type;
+          return (
+            <GivizButton
+              key={type}
+              variant={isSelected ? "primary" : "secondary"}
+              aria-pressed={isSelected}
+              className={`mb-4 px-5 py-2 text-sm ${
+                isSelected
+                  ? "bg-givizPurple text-white border-givizPurple shadow-[4px_4px_0px_0px_#201447]"
+                  : "bg-[#E5E7EB] text-givizBlue4 border-givizPurple/40 hover:bg-[#d4d7dd]"
+              }`}
+              onClick={() => {
+                setSelectedType(type);
+                setSuggestionsPage(0);
+              }}
+            >
+              {label}
+            </GivizButton>
+          );
+        })}
       </div>
       <ResponsiveContainer width="100%" height={180}>
         <BarChart
