@@ -1,5 +1,6 @@
 import json
 import os
+import tempfile
 from datetime import datetime, timezone
 from typing import Any, Optional, Dict
 
@@ -29,13 +30,25 @@ def save_repo_data(
     path = get_repo_data_path(owner, repo, subfolder, base_dir=base_dir)
     os.makedirs(path, exist_ok=True)
     file_path = os.path.join(path, filename)
-    with open(file_path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
+
+    # Write atomically: write to a temp file in the same directory and replace.
+    # This prevents readers from observing partially written files.
+    fd, tmp_path = tempfile.mkstemp(prefix=f".{filename}.", dir=path, text=True)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+            f.flush()
+            os.fsync(f.fileno())
+        os.replace(tmp_path, file_path)
+    finally:
+        # If something went wrong before replace, ensure temp file is removed
+        if os.path.exists(tmp_path):
+            try:
+                os.remove(tmp_path)
+            except OSError:
+                pass
     print(
-        f"Saved {
-            len(data) if hasattr(
-                data,
-                '__len__') else 'data'} items to {file_path}",
+        f"Saved {len(data) if hasattr(data, '__len__') else 'data'} items to {file_path}",
     )
 
 
@@ -53,8 +66,26 @@ def load_repo_data(
     file_path = os.path.join(path, filename)
     if not os.path.exists(file_path):
         return None
-    with open(file_path, encoding="utf-8") as f:
-        return json.load(f)
+
+    # Light retry loop to handle rare transient decode errors
+    # if a replace just occurred on another thread/process.
+    attempts = 3
+    last_err = None
+    for _ in range(attempts):
+        try:
+            with open(file_path, encoding="utf-8") as f:
+                return json.load(f)
+        except json.JSONDecodeError as e:
+            # Small sleep then retry
+            last_err = e
+            try:
+                import time
+
+                time.sleep(0.03)
+            except Exception:
+                pass
+    # If still failing, raise the last error to surface the issue.
+    raise last_err
 
 
 def stat_repo_file(
