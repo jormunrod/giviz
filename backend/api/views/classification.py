@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from drf_yasg.utils import swagger_auto_schema
 from api.serializers.repo import RepoQuerySerializer
-from backend.api.utils.common.merge import merge_contributions
+from api.utils.common.merge import merge_contributions
 
 
 @swagger_auto_schema(method="post", request_body=RepoQuerySerializer)
