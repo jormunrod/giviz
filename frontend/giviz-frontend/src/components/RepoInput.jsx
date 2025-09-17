@@ -434,7 +434,7 @@ export default function RepoInput() {
       )}
       {/* spacer to avoid layout jump on small screens; keeps card steady */}
       {!loading && <div className="hidden sm:block h-0" aria-hidden="true" />}
-      <p className="text-sm text-givizBlack mb-2 text-center">
+      <p className="text-sm text-gray-500 mb-2 text-center">
         Try these repositories:
       </p>
       <div className="flex flex-wrap gap-3 justify-center">
