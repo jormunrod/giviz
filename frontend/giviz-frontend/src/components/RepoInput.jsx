@@ -11,6 +11,19 @@ export default function RepoInput() {
   const API_BASE =
     import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
 
+  const parseEnvLimit = (value, fallback) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+  };
+
+  const showDevLimitsBox =
+    String(import.meta.env.VITE_SHOW_DEV_LIMITS_BOX ?? "true").toLowerCase() !==
+    "false";
+
+  const maxCommitsDefault = parseEnvLimit(import.meta.env.VITE_MAX_COMMITS, 30);
+  const maxIssuesDefault = parseEnvLimit(import.meta.env.VITE_MAX_ISSUES, 30);
+  const maxPullsDefault = parseEnvLimit(import.meta.env.VITE_MAX_PULLS, 30);
+
   const checkRepoStatus = async ({ owner, repo }) => {
     try {
       const res = await fetch(`${API_BASE}/repo/status/`, {
@@ -94,9 +107,9 @@ export default function RepoInput() {
     confirmResolveRef.current = null;
   };
 
-  const [maxCommits, setMaxCommits] = useState(30);
-  const [maxIssues, setMaxIssues] = useState(30);
-  const [maxPulls, setMaxPulls] = useState(30);
+  const [maxCommits, setMaxCommits] = useState(() => maxCommitsDefault);
+  const [maxIssues, setMaxIssues] = useState(() => maxIssuesDefault);
+  const [maxPulls, setMaxPulls] = useState(() => maxPullsDefault);
 
   const examples = [
     { label: "giviz", url: "https://github.com/jormunrod/giviz" },
@@ -335,21 +348,8 @@ export default function RepoInput() {
           <GivizButton variant="secondary">Recalculate now</GivizButton>
         }
       />
-      <div className="flex items-center gap-3 mb-4">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className="w-8 h-8 text-givizBlue4"
-          aria-label="GitHub logo"
-        >
-          <path
-            fillRule="evenodd"
-            d="M12 2C6.477 2 2 6.484 2 12.021c0 4.428 2.865 8.184 6.839 9.504.5.092.682-.217.682-.483 0-.237-.009-.868-.014-1.703-2.782.605-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.004.07 1.532 1.032 1.532 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.339-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.025A9.564 9.564 0 0 1 12 6.844c.85.004 1.705.115 2.504.337 1.909-1.295 2.748-1.025 2.748-1.025.546 1.378.202 2.397.1 2.65.64.7 1.028 1.595 1.028 2.688 0 3.847-2.338 4.695-4.566 4.944.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.749 0 .268.18.579.688.481C19.138 20.2 22 16.447 22 12.021 22 6.484 17.523 2 12 2Z"
-            clipRule="evenodd"
-          />
-        </svg>
-        <div>
+      <div className="flex items-center justify-center gap-3 mb-6">
+        <div className="text-center">
           <h2 className="text-xl font-semibold text-givizBlue4 leading-tight">
             Analyze a repository
           </h2>
@@ -375,59 +375,69 @@ export default function RepoInput() {
           </GivizButton>
         </div>
       </form>
-      {/* DEV LIMITS BOX - REMOVE IN PRODUCTION */}
-      <div className="mb-4">
-        <div className="bg-yellow-50 border border-yellow-300 rounded p-4 flex flex-col gap-2">
-          <div className="text-xs text-yellow-800 font-semibold mb-1">
-            Development only: extraction limits (will be removed in production)
-          </div>
-          <div className="flex flex-wrap gap-4 items-center">
-            <div className="flex flex-col items-start">
-              <label className="text-xs font-medium mb-1" htmlFor="max-commits">
-                Max commits
-              </label>
-              <input
-                id="max-commits"
-                type="number"
-                min={1}
-                value={maxCommits}
-                onChange={(e) => setMaxCommits(Number(e.target.value))}
-                className="w-20 border rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-givizPurple"
-              />
+      {showDevLimitsBox && (
+        <div className="mb-4">
+          <div className="bg-yellow-50 border border-yellow-300 rounded p-4 flex flex-col gap-2">
+            <div className="text-xs text-yellow-800 font-semibold mb-1">
+              Development only: extraction limits (will be removed in
+              production)
             </div>
-            <div className="flex flex-col items-start">
-              <label className="text-xs font-medium mb-1" htmlFor="max-issues">
-                Max issues
-              </label>
-              <input
-                id="max-issues"
-                type="number"
-                min={1}
-                value={maxIssues}
-                onChange={(e) => setMaxIssues(Number(e.target.value))}
-                className="w-20 border rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-givizPurple"
-              />
-            </div>
-            <div className="flex flex-col items-start">
-              <label className="text-xs font-medium mb-1" htmlFor="max-pulls">
-                Max PRs
-              </label>
-              <input
-                id="max-pulls"
-                type="number"
-                min={1}
-                value={maxPulls}
-                onChange={(e) => setMaxPulls(Number(e.target.value))}
-                className="w-20 border rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-givizPurple"
-              />
+            <div className="flex flex-wrap gap-4 items-center">
+              <div className="flex flex-col items-start">
+                <label
+                  className="text-xs font-medium mb-1"
+                  htmlFor="max-commits"
+                >
+                  Max commits
+                </label>
+                <input
+                  id="max-commits"
+                  type="number"
+                  min={1}
+                  value={maxCommits}
+                  onChange={(e) => setMaxCommits(Number(e.target.value))}
+                  className="w-20 border rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-givizPurple"
+                />
+              </div>
+              <div className="flex flex-col items-start">
+                <label
+                  className="text-xs font-medium mb-1"
+                  htmlFor="max-issues"
+                >
+                  Max issues
+                </label>
+                <input
+                  id="max-issues"
+                  type="number"
+                  min={1}
+                  value={maxIssues}
+                  onChange={(e) => setMaxIssues(Number(e.target.value))}
+                  className="w-20 border rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-givizPurple"
+                />
+              </div>
+              <div className="flex flex-col items-start">
+                <label className="text-xs font-medium mb-1" htmlFor="max-pulls">
+                  Max PRs
+                </label>
+                <input
+                  id="max-pulls"
+                  type="number"
+                  min={1}
+                  value={maxPulls}
+                  onChange={(e) => setMaxPulls(Number(e.target.value))}
+                  className="w-20 border rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-givizPurple"
+                />
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
       {/* spacer to avoid layout jump on small screens; keeps card steady */}
       {!loading && <div className="hidden sm:block h-0" aria-hidden="true" />}
-      <p className="text-sm text-givizBlack mb-2">Try these repositories:</p>
-      <div className="flex flex-wrap gap-3">
+      <p className="text-sm text-gray-500 mb-2 text-center">
+        Try these repositories:
+      </p>
+      <div className="flex flex-wrap gap-3 justify-center">
         {examples.map(({ label, url }) => (
           <GivizButton
             key={label}
