@@ -87,11 +87,20 @@ export default function RepoBanner({ owner, repo }) {
   const updatedAt = meta?.updated_at
     ? new Date(meta.updated_at).toLocaleDateString()
     : null;
+  const totalLanguageBytes = languages.reduce(
+    (sum, item) => (Number.isFinite(item.bytes) ? sum + item.bytes : sum),
+    0
+  );
   const languagesToShow = languages.length
-    ? languages.slice(0, 5)
+    ? languages.slice(0, 3)
     : meta?.language
     ? [{ name: meta.language, bytes: null }]
     : [];
+  const formatPercent = (value) =>
+    new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: value >= 10 ? 0 : 1,
+      maximumFractionDigits: 1,
+    }).format(value);
 
   return (
     <Card className="mt-8 w-full max-w-4xl">
@@ -166,21 +175,33 @@ export default function RepoBanner({ owner, repo }) {
           <div className="flex flex-wrap gap-2 text-xs md:text-sm text-givizBlack/70">
             {languagesToShow.map(({ name, bytes }) => {
               const color = LANGUAGE_COLORS[name] || "#64748B";
-              const sizeLabel =
-                typeof bytes === "number" && bytes > 0
-                  ? `${bytes.toLocaleString()} bytes`
-                  : "Primary language";
+              const percentValue =
+                typeof bytes === "number" && bytes > 0 && totalLanguageBytes > 0
+                  ? (bytes / totalLanguageBytes) * 100
+                  : null;
+              const isFallbackLanguage = !languages.length && meta?.language === name;
+              const percentLabel = percentValue !== null
+                ? `${formatPercent(percentValue)}%`
+                : isFallbackLanguage
+                ? "100%"
+                : "—";
+              const sizeLabel = percentValue !== null
+                ? `${bytes.toLocaleString()} bytes (${percentLabel})`
+                : isFallbackLanguage
+                ? "Primary language (percentage estimated)"
+                : "Primary language";
               return (
-              <span
-                key={name}
-                className="inline-flex items-center gap-2 rounded-full border border-black/10 px-3 py-1 font-medium"
-                title={`${name} • ${sizeLabel}`}
-              >
-                <LanguageBadge color={color} />
-                {name}
-              </span>
-            );
-          })}
+                <span
+                  key={name}
+                  className="inline-flex items-center gap-2 rounded-full border border-black/10 px-3 py-1 font-medium"
+                  title={`${name} • ${sizeLabel}`}
+                >
+                  <LanguageBadge color={color} />
+                  <span>{name}</span>
+                  <span className="text-givizBlack/60">{percentLabel}</span>
+                </span>
+              );
+            })}
           {typeof stars === "number" && (
               <span className="inline-flex items-center gap-2 rounded-full border border-black/10 px-3 py-1 font-medium">
                 <StarIcon className="h-4 w-4 text-givizBlue3" />
