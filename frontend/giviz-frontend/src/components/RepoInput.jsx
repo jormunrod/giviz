@@ -121,7 +121,10 @@ export default function RepoInput() {
       label: "PetClinic",
       url: "https://github.com/spring-projects/spring-petclinic",
     },
-    { label: "Mastodon", url: "https://github.com/mastodon/mastodon" },
+    {
+      label: "PythonMiniProjects",
+      url: "https://github.com/Python-World/python-mini-projects",
+    },
   ];
 
   const extractOwnerRepo = (url) => {
