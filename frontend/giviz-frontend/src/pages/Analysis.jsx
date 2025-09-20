@@ -43,7 +43,13 @@ export default function Analysis() {
         const data = await res.json();
         if (active) {
           if (data && Array.isArray(data.contributors)) {
-            setContributors(data.contributors);
+            const sorted = data.contributors
+              .slice()
+              .sort(
+                (a, b) =>
+                  (b.contributions_total || 0) - (a.contributions_total || 0)
+              );
+            setContributors(sorted);
           } else {
             setContributors([]);
           }
