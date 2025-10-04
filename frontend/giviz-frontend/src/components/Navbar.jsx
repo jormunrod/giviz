@@ -61,7 +61,7 @@ export default function Navbar() {
           <img
             src="/giviz_logo.png"
             alt="GIVIZ logo"
-            className="h-6 w-auto transition-all duration-300 ease-out group-hover:scale-105 group-hover:[filter:drop-shadow(0_0_5px_rgba(118,192,255,0.9))_drop-shadow(0_0_16px_rgba(63,124,247,0.65))]"
+            className="neon-logo"
           />
         </a>
         <a
