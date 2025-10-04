@@ -55,9 +55,14 @@ export default function Navbar() {
         <a
           href="/"
           onClick={handleLogoClick}
-          className="text-xl font-semibold text-givizBlue4 hover:underline focus:underline cursor-pointer"
+          className="group flex items-center cursor-pointer transition-opacity hover:opacity-95 focus:opacity-95"
+          aria-label="GIVIZ homepage"
         >
-          GIVIZ
+          <img
+            src="/giviz_logo.png"
+            alt="GIVIZ logo"
+            className="h-6 w-auto transition-all duration-200 group-hover:drop-shadow-[0_0_4px_rgba(20,90,180,0.7)] group-hover:brightness-105"
+          />
         </a>
         <a
           href="https://github.com/jormunrod/giviz"
