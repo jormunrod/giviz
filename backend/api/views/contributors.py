@@ -33,7 +33,11 @@ def extract_contributors_graphql(request):
         return Response({"status": "ok", "n_contributors": len(contributors)})
     except Exception as e:
         return Response({"error": str(e)}, status=500)
-def _resolve_by_identity(login=None, name=None, email=None, *, name_map, email_map, login_map):
+
+
+def _resolve_by_identity(
+    login=None, name=None, email=None, *, name_map, email_map, login_map
+):
     if login:
         normalized = login.lower()
         if normalized in login_map:
@@ -156,7 +160,9 @@ def get_contributors(request):
     contributors = prepare_contributors(contributors)
     for contributor in contributors:
         login = contributor.get("login")
-        totals = contribution_totals.get(login, {"commits": 0, "issues": 0, "pulls": 0, "total": 0})
+        totals = contribution_totals.get(
+            login, {"commits": 0, "issues": 0, "pulls": 0, "total": 0}
+        )
         contributor["commits_count"] = totals["commits"]
         contributor["issues_count"] = totals["issues"]
         contributor["pulls_count"] = totals["pulls"]
