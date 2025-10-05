@@ -33,6 +33,31 @@ The script prints a menu with the following options:
 
 The script is safe to re-run; it will reuse the existing Python virtual environment and `node_modules` directory when present.
 
+## Environment Configuration
+Both the backend and frontend expect a local `.env` file. Start from the checked-in templates and fill in the values that apply to your setup.
+
+### Backend
+```bash
+cp backend/.env.example backend/.env
+```
+Required keys:
+- `GITHUB_TOKEN` – Personal access token used to authenticate GitHub API requests.
+- `OPENAI_API_KEY` – API key required for any OpenAI-powered features.
+- `GITHUB_API_URL` – GraphQL endpoint (leave as the default unless you point at GitHub Enterprise).
+- `REPOS_PATH` – Local directory where cloned repository data is cached.
+- `BATCH_SIZE` – Batch size for GitHub queries (tune if you hit rate limits).
+
+### Frontend
+```bash
+cp frontend/giviz-frontend/.env.example frontend/giviz-frontend/.env
+```
+Key settings:
+- `VITE_API_BASE_URL` – URL of the backend API; keep `http://localhost:8000/api` for local work.
+- `VITE_SHOW_DEV_LIMITS_BOX` – Toggle developer-only UI helpers.
+- `VITE_MAX_COMMITS`, `VITE_MAX_ISSUES`, `VITE_MAX_PULLS` – Page-size limits for visualisations.
+
+Restart any running dev servers (or re-run `./run.sh`) after editing these files so the new values are picked up.
+
 ## Manual Setup (Optional)
 
 If you prefer to work without the helper script, follow the manual instructions below.
